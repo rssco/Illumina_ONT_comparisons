@@ -74,7 +74,7 @@ facet_zoom(ylim = c(0,100000), split = TRUE, zoom.size = 4)
 
 ```
 
-# 2. With adaptative sampling
+## 2. With adaptative sampling
 ```r
 #load ps + read length table
 ps_with_adapt <- readRDS("02_Phyloseq_objects/04_ps_with_adapt_SAMBA.rds")
@@ -136,7 +136,7 @@ zoom_with <- ggplot(merged, aes(x = pb, fill=Class)) + geom_histogram(position =
 facet_zoom(ylim = c(0,100000), split = TRUE, zoom.size = 4)
 ```
 
-# 3. Combined figures
+## 3. Combined figures
 
 ```r
 ab <- gridExtra::grid.arrange(without, with, ncol=2)
