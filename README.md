@@ -1,1 +1,1 @@
-# Illumina_ONT_comparisons
+# Illumina vs ONT comparisons
