@@ -1,23 +1,17 @@
 # Performed assignation with SAMBA on Slurm cluster
-## 1. SAMBA assignation 
+## 1. SAMBA assignation with and without adaptative sampling
+
+Same parameters with and without adaptative sampling
 
 https://gitlab.ifremer.fr/bioinfo/workflows/samba
  
-> change conf/nanopore.config
-// Minimum length of raw nanopore reads to keep
-    nanopore_read_minlength = "0"
-
-// Maximale length of raw nanopore reads to keep
-    nanopore_read_maxlength = "100000"
-
-minimap2_db = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_SEQ_k15.mmi"
-ref_tax = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_TAX.txt"
-
-// Taxonomic level to analyse data. Can be: Kingdom;Phylum;Class;Order;Genus;Species
-    tax_rank = "Species"
-
-// Define the Kingdom studied e.g for 16S nanopore reads: "Bacteria" or for 18S nanopore reads: "Eukaryota"
-    kingdom = "Bacteria"
+Changes in conf/nanopore.config
+> Minimum length of raw nanopore reads to keep: nanopore_read_minlength = "0"
+> Maximale length of raw nanopore reads to keep: nanopore_read_maxlength = "100000"
+> minimap2_db = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_SEQ_k15.mmi"
+> ref_tax = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_TAX.txt"
+> Taxonomic level to analyse data. Can be: Kingdom;Phylum;Class;Order;Genus;Species: tax_rank = "Species"
+> Define the Kingdom studied e.g for 16S nanopore reads: "Bacteria" or for 18S nanopore reads: "Eukaryota": kingdom = "Bacteria"
 
 ```bash
 #!/usr/bin/env bash
@@ -36,32 +30,6 @@ module load nextflow slurm-drmaa graphviz
 
 nextflow run ../finalresult/02_ONT/00_BASECALLING_GUPPY_ADAPTATIVE_SAMPLING_v6.1.5/03_SAMBA/samba/main.nf -profile singularity,nanopore -c ../finalresult/02_ONT/00_BASECALLING_GUPPY_ADAPTATIVE_SAMPLING_v6.1.5/03_SAMBA/samba/abims.config
 ```
-
-## 3. KRAKEN2 assignation
-
-```bash
-#!/usr/bin/env bash
-#SBATCH --job-name=kraken2
-#SBATCH --partition fast
-#SBATCH --mem 1G
-#SBATCH --cpus-per-task 1
-#SBATCH -o %x-%j.out 
-#SBATCH -e %x-%j.err
-#SBATCH --mail-user coralie.rousseau@sb-roscoff.fr
-#SBATCH --mail-type ALL
-#SBATCH --array 1-28
-
-module load kraken2/2.1.2  
-
-database=../databases/01_KRAKEN2/16S_KRAKEN2_138.1
-input=$(ls ../archive/02_MINION_WITHOUT_ADAPTATIVE/*gz | awk "NR==$SLURM_ARRAY_TASK_ID") 
-output=../finalresult/02_ONT/02_MINION_WITHOUT_ADAPTATIVE/08_KRAKEN2/
-
-
-#kraken2 --db ${database} ${input} --report ${output}/$(basename ${input%.fastq.gz}_16S.kreport) --output ${output}/$(basename ${input%.fastq.gz}_16S.kraken) --use-na
-mes --memory-mapping
-```
-
 
 
 # On Rstudio
