@@ -511,7 +511,7 @@ ochim_18S.rds")
 ```
 
 #### Remove chimeras vsearch
-```r
+```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=chimera
 #SBATCH --partition fast
