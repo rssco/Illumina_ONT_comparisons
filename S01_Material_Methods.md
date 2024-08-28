@@ -27,6 +27,7 @@ filtRs <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names, "_R_filt.fast
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
+# Read filtering
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(300,200),
               maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, trimLeft=c(17,19),
               compress=TRUE, multithread=TRUE) 
@@ -40,13 +41,13 @@ mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 seqtab <- makeSequenceTable(mergers)
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 
-
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
 rownames(track) <- sample.names
 track
 
+# Assign taxonomy 
 taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
 taxa.print <- taxa # Removing sequence rownames for display only
 rownames(taxa.print) <- NULL
@@ -142,15 +143,15 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[1]]),
 #### DADA2
 
 ```r
+# data
 cutFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
 cutRs <- sort(list.files(path.cut, pattern = "R2_001.fastq.gz", full.names = TRUE))
 
-# Extract sample names, assuming filenames have format:
 get.sample.name <- function(fname) strsplit(basename(fname), "_")[[1]][1]
 sample.names <- unname(sapply(cutFs, get.sample.name))
 sample.names
 
-iltFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
+filtFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
 filtRs <- sort(list.files(path.cut, pattern = "R2_001.fastq.gz", full.names = TRUE))
 
 path_cutadapt_filt="02_Sequences/cutadapt/filtered/"
@@ -158,7 +159,7 @@ path_cutadapt_filt="02_Sequences/cutadapt/filtered/"
 filtFs <- file.path(path.cut, "filtered", basename(cutFs))
 filtRs <- file.path(path.cut, "filtered", basename(cutRs))
 
-
+# Read filtering
 out <- filterAndTrim(cutFs, filtFs, cutRs, filtRs, truncLen=c(260,230), maxN=0, maxEE=c(2,5), truncQ=2, minLen = 50, rm.phix=TRUE,compress=TRUE, multithread=TRUE) 
 
 errF <- learnErrors(filtFs, multithread = TRUE)
@@ -175,19 +176,19 @@ seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE
 getN <- function(x) sum(getUniques(x))
 track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, 
     getN), rowSums(seqtab.nochim))
-# If processing a single sample, remove the sapply calls: e.g. replace
-# sapply(dadaFs, getN) with getN(dadaFs)
 colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", 
     "nonchim")
 rownames(track) <- sample.names
 track
 
+# Assign taxonomy
 unite.ref <- "03_Databases/sh_general_release_dynamic_25.07.2023.fasta "  
 taxa <- assignTaxonomy(seqtab.nochim, unite.ref, multithread = TRUE, tryRC = TRUE)
 taxa.print <- taxa # Removing sequence rownames for display only
 rownames(taxa.print) <- NULL
 head(taxa.print)
 
+# SAVE
 saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
 ```
 
