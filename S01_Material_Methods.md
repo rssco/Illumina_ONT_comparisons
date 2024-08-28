@@ -79,6 +79,107 @@ rownames(taxa.print) <- NULL
 head(taxa.print)
 ```
 
+#### Phyloseq and decontamination <a name="miseq_bacteria_phyloseq"></a>
+
+Ps construction
+```r
+#Library
+library(phyloseq)
+library(microdecon)
+
+sample <- read.table("01_Tables/sample.csv", sep=";", header=TRUE, row.names = 1)
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows = FALSE),
+               sample_data(sample),
+               tax_table(taxa))
+
+dna <- Biostrings::DNAStringSet(taxa_names(ps)) 
+names(dna) <- taxa_names(ps) 
+ps <- merge_phyloseq(ps, dna) 
+taxa_names(ps) <- paste0("OTU", seq(ntaxa(ps))) 
+
+saveRDS(ps, "00_Phyloseq_objects/01_ps.rds")
+```
+
+Decontamination with microdecon
+```r
+tax <- ps@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "otu_id"
+
+otu <- ps@otu_table %>% as.data.frame() %>% t()
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "otu_id"
+
+
+otu %<>% as.data.frame() %>%  relocate("T-neg-NOV-BACT", .before="L1I1-MARS-BACT") 
+otu %<>% as.data.frame() %>%  relocate("T-neg-MARS-BACT", .before="L1I1-MARS-BACT")
+
+
+otu_tax <- merge(otu, tax)
+otu_tax %<>% unite("taxonomy", Kingdom:Species, sep = ";")
+
+# Transform column in numeric
+otu_tax[, 2:29] <- sapply(otu_tax[, 2:29], as.numeric)
+
+#run microdecon
+clean_data <-  decon(data = otu_tax, numb.blanks = 2, numb.ind = c(24,2), taxa = TRUE, thresh = 1)
+```
+
+ps decontaminated
+```r
+tax <- ps@tax_table %>% as.data.frame()
+otu <- clean_data$decon.table %>% as.data.frame()
+sample <- ps@sam_data %>% as.data.frame()
+otu %<>% select(-c(Mean.blank, taxonomy))
+
+otu2 <- otu[,-1]
+rownames(otu2) <- otu[,1]
+
+rm(otu)
+otu <- otu2
+
+
+otu <- as.matrix(otu)
+tax <- as.matrix(tax)
+
+OTU = otu_table(otu, taxa_are_rows = TRUE)
+TAX = tax_table(tax)
+samples = sample_data(sample)
+ 
+ps_decon <- phyloseq(OTU, TAX, samples)
+```
+
+Remove mock
+```r
+ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-mars", ps_decon)
+ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-nov", ps_decon)
+```
+
+Remove plastid reads
+```r
+tax <- ps_decon_wt_mock@tax_table %>% as.data.frame()
+
+noaff <- tax %>% as.data.frame() %>% filter(is.na(Kingdom)) #175
+otu_noaff <- rownames(noaff[1]) 
+
+mito <- tax %>% as.data.frame() %>% filter(Family=="Mitochondria") #162
+otu_mito <- rownames(mito[1])
+
+chloro <- tax %>% as.data.frame() %>% filter(Order=="Chloroplast") #82
+otu_chloroplast <- rownames(chloro[1])
+
+all_ASV = taxa_names(ps_decon_wt_mock)
+all_ASV <- all_ASV[!(all_ASV %in% otu_chloroplast)]
+all_ASV <- all_ASV[!(all_ASV %in% otu_noaff)]
+all_ASV <- all_ASV[!(all_ASV %in% otu_mito)]
+
+ps_decon_wt_mock_clean <- ps_decon_wt_mock
+ps_decon_wt_mock_clean=prune_taxa(all_ASV, ps_decon_wt_mock)
+ps_decon_wt_mock_clean
+```
+
 ### 2. Fungi <a name="miseq_fungi"></a>
 #### Cutadapt <a name="miseq_fungi_cutadapt"></a>
 ```r
@@ -409,6 +510,28 @@ saveRDS(seqtab.nochim_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLI
 ochim_18S.rds")
 ```
 
+#### Remove chimeras vsearch
+```r
+#!/usr/bin/env bash
+#SBATCH --job-name=chimera
+#SBATCH --partition fast
+#SBATCH --mem 5G
+#SBATCH --cpus-per-task 3 
+#SBATCH -o %x-%j.out 
+#SBATCH -e %x-%j.err
+#SBATCH --mail-user coralie.rousseau@sb-roscoff.fr
+#SBATCH --mail-type END
+
+module load vsearch
+
+
+input=03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/08_CHIMERA_VSEARCH/bact_euk.fasta
+output_chimera=03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/08_CHIMERA_VSEARCH/chimera.fasta
+output_no_chimera=03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/08_CHIMERA_VSEARCH/no_chimera.fasta
+db=databases/SILVA_138.1_SSURef_NR99_tax_silva.fasta
+
+vsearch --threads 3 --uchime_ref ${input} --chimera ${output_chimera} --nonchimeras ${output_no_chimera} --db ${db}
+```
 
 ### 2. Fungi <a name="novaseq_fungi"></a>
 #### Cutadapt <a name="novaseq_fungi_cutadapt"></a>
