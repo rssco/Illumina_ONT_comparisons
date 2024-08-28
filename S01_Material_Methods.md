@@ -1,9 +1,9 @@
 # Read processing for MiSeq, NovaSeq and ONT
 
-Table of content
-[A. MiSeq read processing](#miseq)
-[B. NovaSeq read processing](## B. NovaSeq read processing)
-[C. ONT read processing ](## C. ONT read processing)
+##Table of content
+A. [MiSeq read processing](#miseq)
+B. [NovaSeq read processing](#novaseq)
+C. [ONT read processing ](#ont)
 
 ## A. MiSeq read processing <a name="miseq"></a>
 ### 1. Bacteria
@@ -199,7 +199,7 @@ head(taxa.print)
 saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
 ```
 
-## B. NovaSeq read processing
+## B. NovaSeq read processing <a name="novaseq"></a>
 ### 1. Bacteria
 
 #### Cutadapt
@@ -473,7 +473,7 @@ saveRDS(taxa_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/05_taxa
 saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/06_seqtab.nochim_ITS.rds")
 ```
 
-## C. ONT read processing
+## C. ONT read processing <a name="ont"></a>
 ### 1. Bacteria
 #### Cutadapt
 
