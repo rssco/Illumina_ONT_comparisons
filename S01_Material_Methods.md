@@ -2,18 +2,30 @@
 
 ## Table of content  
 [A. MiSeq read processing](#miseq)  
-	[1. Bacteria](#miseq_bacteria)  
+    [1. Bacteria](#miseq_bacteria)  
+        [DADA2](#miseq_bacteria_dada2)  
 	[2. Fungi](#miseq_fungi)  
+        [Cutadapt](#miseq_fungi_cutadapt)  
+        [DADA2](#miseq_fungi_dada2)  
 [B. NovaSeq read processing](#novaseq)  
 	[1. Bacteria](#novaseq_bacteria)  
+        [Cutadapt](#novaseq_bacteria_cutadapt)  
+        [Split 16S/18S](novaseq_split)  
+        [DADA2 16S](novaseq_16S_dada2)  
+        [DADA2 18S](novaseq_18S_dada2)  
 	[2. Fungi](#novaseq_fungi)  
-[C. ONT read processing ](#ont)  
+        [Cutadapt](#novaseq_fungi_cutadapt)  
+        [DADA2](#novaseq_fungi_dada2)  
+[C. ONT read processing ](#ont)   
 	[1. Bacteria](#ont_bacteria)  
+        [Cutadapt](#ont_bacteria_cutadapt)   
 	[2. Fungi](#ont_fungi)  
+        [Cutadapt](#ont_fungi_cutadapt)
+
 
 ## A. MiSeq read processing <a name="miseq"></a>
 ### 1. Bacteria <a name="miseq_bacteria"></a>
-#### DADA2
+#### DADA2 <a name="miseq_bacteria_dada2"></a>
 
 ```r
 # Library
@@ -68,7 +80,7 @@ head(taxa.print)
 ```
 
 ### 2. Fungi <a name="miseq_fungi"></a>
-#### Cutadapt
+#### Cutadapt <a name="miseq_fungi_cutadapt"></a>
 ```r
 #Library
 library(dada2)
@@ -153,7 +165,7 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[1]]),
     REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.cut[[1]]))
 ```
 
-#### DADA2
+#### DADA2 <a name="miseq_fungi_dada2"></a>
 
 ```r
 # data
@@ -208,7 +220,7 @@ saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
 ## B. NovaSeq read processing <a name="novaseq"></a>
 ### 1. Bacteria <a name="novaseq_bacteria"></a>
 
-#### Cutadapt
+#### Cutadapt <a name="novaseq_bacteria_cutadapt" ></a>
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=cutadapt
@@ -233,7 +245,7 @@ do \
 ample}_R1_cutadapt.fastq.gz -p ${output}/${sample}_R2_cutadapt.fastq.gz; done
 ```
 
-#### Split 16S/18S
+#### Split 16S/18S <a name="novaseq_split"></a>
 https://astrobiomike.github.io/amplicon/16S_and_18S_mixed
 
 ```bash
@@ -285,7 +297,7 @@ input=$(ls /shared/projects/seabioz/finalresult/03_NOVASEQ_METAB/03_BACTERIA_ANA
 python split_16S_18S_reads.py -f ${input} -r ${input%_R1_cutadapt.fastq.gz}_R2_cutadapt.fastq.gz -E ${input%_R1_cutadapt.fastq.gz}_18S_headers.txt
 ```
 
-#### DADA2 16S
+#### DADA2 16S <a name="novaseq_16S_dada2"></a>
 ```r
 library(dada2); packageVersion("dada2")
 
@@ -341,7 +353,7 @@ saveRDS(seqtab.nochim_16S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLI
 ochim_16S.rds")
 ```
 
-#### DADA2 18S
+#### DADA2 18S <a name="novaseq_18S_dada2"></a>
 
 ```r
 library(dada2); packageVersion("dada2")
@@ -399,7 +411,7 @@ ochim_18S.rds")
 
 
 ### 2. Fungi <a name="novaseq_fungi"></a>
-#### Cutadapt
+#### Cutadapt <a name="novaseq_fungi_cutadapt"></a>
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=cutadapt
@@ -424,7 +436,7 @@ do \
 ample}_R1_cutadapt.fastq.gz -p ${output}/${sample}_R2_cutadapt.fastq.gz; done
 ```
 
-#### DADA2
+#### DADA2 <a name="novaseq_fungi_dada2"></a>
 
 ```r
 library(dada2); packageVersion("dada2")
@@ -481,7 +493,7 @@ saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUT
 
 ## C. ONT read processing <a name="ont"></a>
 ### 1. Bacteria <a name="ont_bacteria"></a>
-#### Cutadapt
+#### Cutadapt <a name="ont_bacteria_cutadapt"></a>
 
 ```bash
 #!/usr/bin/env bash
@@ -510,7 +522,7 @@ t.fastq.gz; done
 
 
 ### 2. Fungi <a name="ont_fungi"></a>
-#### Cutadapt
+#### Cutadapt <a name="ont_fungi_cutadapt"></a>
 
 ```bash
 #!/usr/bin/env bash
