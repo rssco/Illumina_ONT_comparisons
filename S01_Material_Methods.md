@@ -1,12 +1,18 @@
 # Read processing for MiSeq, NovaSeq and ONT
 
-##Table of content
-A. [MiSeq read processing](#miseq)  
-B. [NovaSeq read processing](#novaseq)  
-C. [ONT read processing ](#ont)  
+## Table of content  
+[A. MiSeq read processing](#miseq)  
+ [1. Bacteria](#miseq bacteria)  
+ [2. Fungi](#miseq fungi)  
+[B. NovaSeq read processing](#novaseq)  
+ [1. Bacteria](#novaseq bacteria)  
+ [2. Fungi](#novaseq fungi)  
+[C. ONT read processing ](#ont)  
+ [1. Bacteria](#ont bacteria)  
+ [2. Fungi](#ont fungi)  
 
 ## A. MiSeq read processing <a name="miseq"></a>
-### 1. Bacteria
+### 1. Bacteria <a name="miseq bacteria"></a>
 #### DADA2
 
 ```r
@@ -61,7 +67,7 @@ rownames(taxa.print) <- NULL
 head(taxa.print)
 ```
 
-### 2. Fungi
+### 2. Fungi <a name="miseq fungi"></a>
 #### Cutadapt
 ```r
 #Library
@@ -200,7 +206,7 @@ saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
 ```
 
 ## B. NovaSeq read processing <a name="novaseq"></a>
-### 1. Bacteria
+### 1. Bacteria <a name="novaseq bacteria"></a>
 
 #### Cutadapt
 ```bash
@@ -392,7 +398,7 @@ ochim_18S.rds")
 ```
 
 
-### 2. Fungi
+### 2. Fungi <a name="novaseq fungi"></a>
 #### Cutadapt
 ```bash
 #!/usr/bin/env bash
@@ -474,7 +480,7 @@ saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUT
 ```
 
 ## C. ONT read processing <a name="ont"></a>
-### 1. Bacteria
+### 1. Bacteria <a name="ont bacteria"></a>
 #### Cutadapt
 
 ```bash
@@ -503,7 +509,7 @@ t.fastq.gz; done
 ```
 
 
-### 2. Fungi
+### 2. Fungi <a name="ont fungi"></a>
 #### Cutadapt
 
 ```bash
