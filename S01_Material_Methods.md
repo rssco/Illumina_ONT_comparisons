@@ -2,8 +2,8 @@
 
 ## Table of content  
 [A. MiSeq read processing](#miseq)  
-   -[1. Bacteria](#miseq_bacteria)  
-       -[DADA2](#miseq_bacteria_dada2)  
+	[1. Bacteria](#miseq_bacteria)  
+		[DADA2](#miseq_bacteria_dada2)  
 	[2. Fungi](#miseq_fungi)  
         [Cutadapt](#miseq_fungi_cutadapt)  
         [DADA2](#miseq_fungi_dada2)  
