@@ -302,13 +302,9 @@ S.rds")
 
 errF_16S <- learnErrors(filtFs_16S, multithread=TRUE)
 errR_16S <- learnErrors(filtRs_16S, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/02_err_16S.RData")
 dadaFs_16S <- dada(filtFs_16S, err=errF_16S, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/03_dadaFs_16S.RData")
 dadaRs_16S <- dada(filtRs_16S, err=errR_16S, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/04_dadaRs_16S.RData")
 mergers_16S <- mergePairs(dadaFs_16S, filtFs_16S, dadaRs_16S, filtRs_16S, verbose=TRUE)
-save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/05_mergers_16S.RData")
 seqtab_16S <- makeSequenceTable(mergers_16S)
 seqtab.nochim_16S <- removeBimeraDenovo(seqtab_16S, method="consensus", multithread=TRUE, verbose=TRUE)
 save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/06_seqtabnochim_16S.RData"
@@ -321,8 +317,6 @@ track_16S
 
 save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/07_tracks_16S.RData")
 
-
-load("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/07_tracks_16S.RData")
 taxa_16S <- assignTaxonomy(seqtab.nochim_16S, "03_NOVASEQ_METAB/02_DATABASES/silva_nr99_v138.1_train_set.fa", multithread=TRUE)
 taxa.print_16S <- taxa_16S # Removing sequence rownames for display only
 rownames(taxa.print_16S) <- NULL
@@ -357,16 +351,12 @@ out_18S <- filterAndTrim(fnFs_18S, filtFs_18S, fnRs_18S, filtRs_18S, maxN=0, max
 RUE) 
 out_18S
 
-
-saveRDS(out_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/11_out_filt_split_18S
-.rds")
 save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/12_out_filt_18S.RData")
 
 errF_18S <- learnErrors(filtFs_18S, multithread=TRUE)
 errR_18S <- learnErrors(filtRs_18S, multithread=TRUE)
 dadaFs_18S <- dada(filtFs_18S, err=errF_18S, multithread=TRUE)
 dadaRs_18S<- dada(filtRs_18S, err=errR_18S, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/13_err_dada_18S.RData")
 
 mergers_18S <- mergePairs(dadaFs_18S, filtFs_18S, dadaRs_18S, filtRs_18S, verbose=TRUE, justConcatenate = TRUE)
 seqtab_18S <- makeSequenceTable(mergers_18S)
@@ -449,13 +439,10 @@ save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/01_out_filt_sp
 
 errF_ITS <- learnErrors(filtFs_ITS, multithread=TRUE)
 errR_ITS <- learnErrors(filtRs_ITS, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/02_err_ITS.RData")
 dadaFs_ITS <- dada(filtFs_ITS, err=errF_ITS, multithread=TRUE)
 dadaRs_ITS <- dada(filtRs_ITS, err=errR_ITS, multithread=TRUE)
-save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/03_dada_ITS.RData")
 
 mergers_ITS <- mergePairs(dadaFs_ITS, filtFs_ITS, dadaRs_ITS, filtRs_ITS, verbose=TRUE)
-save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/04_mergers_ITS.RData")
 seqtab_ITS <- makeSequenceTable(mergers_ITS)
 seqtab.nochim_ITS <- removeBimeraDenovo(seqtab_ITS, method="consensus", multithread=TRUE, verbose=TRUE)
 
@@ -477,8 +464,6 @@ rownames(taxa.print_ITS) <- NULL
 save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/04_dada_pipeline_ITS.RData")
 saveRDS(taxa_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/05_taxa_ITS.rds")
 saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/06_seqtab.nochim_ITS.rds")
-
-
 ```
 
 ## C. ONT read processing
