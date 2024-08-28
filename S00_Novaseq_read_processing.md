@@ -6,15 +6,18 @@
 - [Split 16S/18S](#novaseq_split)  
 - [DADA2 16S](#novaseq_16S_dada2)  
 - [DADA2 18S](#novaseq_18S_dada2)  
-
+- [Phyloseq with 16S and 18S](#ps_16S_18S) 
+- [Remove plastid reads](#novaseq_remove_plastid) 
+- [Decontamination with Microdecon](#novaseq_microdecon) 
+- [Remove Homopolymer](#novaseq_homopolymer) 
+- [Remove chimeras vsearch](#novaseq_vsearch) 
+- [Identity Ascophyllum ASVs](#novaseq_asco) 
+- [Final novaseq ps object for sequencing comparison](#novaseq_ps_final) 
+  
 [2. Fungi](#novaseq_fungi)  
 - [Cutadapt](#novaseq_fungi_cutadapt)  
 - [DADA2](#novaseq_fungi_dada2)  
 
-
-| [Bacteria](#novaseq_bacteria) | [Fungi](#novaseq_fungi)   |
-|----------|----------|
-| - [Cutadapt](#novaseq_bacteria_cutadapt)\[Split 16S/18S](#novaseq_split) | - [Cutadapt](#novaseq_fungi_cutadapt)   |
 
 ## 1. Bacteria <a name="novaseq_bacteria"></a>
 
@@ -207,7 +210,7 @@ saveRDS(seqtab.nochim_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLI
 ochim_18S.rds")
 ```
 
-### Ps with 16S and 18S
+### Phyloseq with 16S and 18S <a name="ps_16S_18S"></a>
 ```r
 taxa_16S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_16S.rds")
 taxa_18S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_18S.rds")
@@ -237,7 +240,7 @@ taxa_names(ps) <- paste0("ASV_", seq(ntaxa(ps)))
 saveRDS(ps, "00_PHYLOSEQ_OBJECTS/01_ps.rds")
 ```
 
-### Remove plastid reads
+### Remove plastid reads <a name="novaseq_remove_plastid"></a>
 ```r
 tax <- ps_sup@tax_table %>% as.data.frame()
 
@@ -265,7 +268,7 @@ saveRDS(ps_sup_clean, "00_PHYLOSEQ_OBJECTS/03_ps_sup_clean.rds")
 ```
 
 
-### Decontamination with Microdecon
+### Decontamination with Microdecon <a name="novaseq_microdecon"></a>
 
 ```r
 ## change first column 
@@ -314,7 +317,7 @@ ps_decon
 saveRDS(ps_decon, "00_PHYLOSEQ_OBJECTS/04_ps_decon.rds")
 ```
 
-### Remove Homopolymer
+### Remove Homopolymer <a name="novaseq_homopolymer"></a>
 ```r
 ref <- ps_decon@refseq %>% as.data.frame()
 colnames(ref)[1] <- "sequence"
@@ -352,7 +355,7 @@ ps_decon_wt_cc <- phyloseq(OTU, TAX, ps_decon@refseq, ps_decon@sam_data)
 saveRDS(ps_decon_wt_cc, "00_PHYLOSEQ_OBJECTS/05_ps_wt_homopoly.rds")
 ```
 
-### Remove chimeras vsearch
+### Remove chimeras vsearch <a name="novaseq_vsearch"></a>
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=chimera
@@ -390,7 +393,7 @@ ps_decon_wt_cc_no_chimera
 saveRDS(ps_decon_wt_cc_no_chimera, "00_PHYLOSEQ_OBJECTS/06_ps_no_chimeras.rds")
 ```
 
-### Identity Ascophyllum ASVs
+### Identity Ascophyllum ASVs <a name="novaseq_asco"></a>
 
 ```r
 ref <- ps_decon_wt_cc_no_chimera@refseq %>% as.data.frame()
@@ -430,7 +433,7 @@ ps_decon_asco <- phyloseq(OTU, TAX, ps_decon_wt_cc_no_chimera@refseq, ps_decon_w
 saveRDS(ps_decon_asco, "00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
 ```
 
-### Final novaseq ps object for sequencing comparison
+### Final novaseq ps object for sequencing comparison <a name="novaseq_ps_final"></a>
 
 ```r
 ps_decon_asco <- readRDS("../01_Microdecon_all/00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
