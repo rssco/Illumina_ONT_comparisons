@@ -1,14 +1,14 @@
-# A. MiSeq read processing
+## A. MiSeq read processing
 
 
 
 
 
 
-# B. NovaSeq read processing
-## 1. Bacteria
+## B. NovaSeq read processing
+### 1. Bacteria
 
-### Cutadapt
+#### Cutadapt
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=cutadapt
@@ -33,7 +33,7 @@ do \
 ample}_R1_cutadapt.fastq.gz -p ${output}/${sample}_R2_cutadapt.fastq.gz; done
 ```
 
-### Split 16S/18S
+#### Split 16S/18S
 https://astrobiomike.github.io/amplicon/16S_and_18S_mixed
 
 ```bash
@@ -85,8 +85,7 @@ input=$(ls /shared/projects/seabioz/finalresult/03_NOVASEQ_METAB/03_BACTERIA_ANA
 python split_16S_18S_reads.py -f ${input} -r ${input%_R1_cutadapt.fastq.gz}_R2_cutadapt.fastq.gz -E ${input%_R1_cutadapt.fastq.gz}_18S_headers.txt
 ```
 
-### DADA2
-
+#### DADA2 16S
 ```r
 library(dada2); packageVersion("dada2")
 
@@ -137,7 +136,7 @@ save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELI
 
 
 load("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/07_tracks_16S.RData")
-taxa_16S <- assignTaxonomy(seqtab.nochim_16S, "/shared/projects/seabioz/finalresult/03_NOVASEQ_METAB/02_DATABASES/silva_nr99_v138.1_train_set.fa", multithread=TRUE)
+taxa_16S <- assignTaxonomy(seqtab.nochim_16S, "03_NOVASEQ_METAB/02_DATABASES/silva_nr99_v138.1_train_set.fa", multithread=TRUE)
 taxa.print_16S <- taxa_16S # Removing sequence rownames for display only
 rownames(taxa.print_16S) <- NULL
 
@@ -148,12 +147,69 @@ saveRDS(seqtab.nochim_16S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLI
 ochim_16S.rds")
 ```
 
+#### DADA2 18S
+
+```r
+library(dada2); packageVersion("dada2")
 
 
+path="03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/04_SPLIT_18S/"
+files <- list.files(path)
+
+fnFs_18S <- sort(list.files(path, pattern="_R1_cutadapt.fastq.gz", full.names = TRUE))
+fnRs_18S <- sort(list.files(path, pattern="_R2_cutadapt.fastq.gz", full.names = TRUE))
+
+sample.names_18S <- sapply(strsplit(basename(fnFs_18S), "_cutadapt"), `[`, 1)
+
+filtFs_18S <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names_18S, "_R1_filt_dada2.fastq.gz"))
+filtRs_18S <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names_18S, "_R2_filt_dada2.fastq.gz"))
+names(filtFs_18S) <- sample.names_18S
+names(filtRs_18S) <- sample.names_18S
+
+out_18S <- filterAndTrim(fnFs_18S, filtFs_18S, fnRs_18S, filtRs_18S, maxN=0, maxEE=c(2,2), truncLen = c(231,230), truncQ=2, rm.phix=TRUE, compress=TRUE, multithread=T
+RUE) 
+out_18S
 
 
-## 2. Fungi
-### Cutadapt
+saveRDS(out_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/11_out_filt_split_18S
+.rds")
+save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/12_out_filt_18S.RData")
+
+errF_18S <- learnErrors(filtFs_18S, multithread=TRUE)
+errR_18S <- learnErrors(filtRs_18S, multithread=TRUE)
+dadaFs_18S <- dada(filtFs_18S, err=errF_18S, multithread=TRUE)
+dadaRs_18S<- dada(filtRs_18S, err=errR_18S, multithread=TRUE)
+save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/13_err_dada_18S.RData")
+
+mergers_18S <- mergePairs(dadaFs_18S, filtFs_18S, dadaRs_18S, filtRs_18S, verbose=TRUE, justConcatenate = TRUE)
+seqtab_18S <- makeSequenceTable(mergers_18S)
+seqtab.nochim_18S <- removeBimeraDenovo(seqtab_18S, method="consensus", multithread=TRUE, verbose=TRUE)
+
+save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/08_seqtabnochim_18S.RData")
+
+getN_18S <- function(x) sum(getUniques(x))
+track_18S <- cbind(out_18S, sapply(dadaFs_18S, getN_18S), sapply(dadaRs_18S, getN_18S), sapply(mergers_18S, getN_18S), rowSums(seqtab.nochim_18S))
+colnames(track_18S) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track_18S) <- sample.names_18S
+track_18S
+
+taxa_18S <- assignTaxonomy(seqtab.nochim_18S, "03_NOVASEQ_METAB/02_DATABASES/pr2_version_5.0.0_SSU_dada2.fasta.gz",
+                       taxLevels = c("Kingdom","Supergroup","Division", "Subdivision", "Class","Order","Family","Genus","Species"), multithread=TRUE)
+
+taxa.print_18S <- taxa_18S 
+rownames(taxa.print_18S) <- NULL
+
+# SAVE 
+save.image("03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/14_dada_pipeline_18S.RData"
+)
+saveRDS(taxa_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/15_taxa_18S.rds")
+saveRDS(seqtab.nochim_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_PIPELINE/05_RSTUDIO_OUTPUTS/16_seqtab.n
+ochim_18S.rds")
+```
+
+
+### 2. Fungi
+#### Cutadapt
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=cutadapt
@@ -178,13 +234,69 @@ do \
 ample}_R1_cutadapt.fastq.gz -p ${output}/${sample}_R2_cutadapt.fastq.gz; done
 ```
 
-### DADA2
+#### DADA2
+
+```r
+library(dada2); packageVersion("dada2")
+
+
+path="03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/01_CUTADAPT"
+files <- list.files(path)
+
+fnFs_ITS <- sort(list.files(path, pattern="_R1_cutadapt.fastq.gz", full.names = TRUE))
+fnRs_ITS <- sort(list.files(path, pattern="_R2_cutadapt.fastq.gz", full.names = TRUE))
+
+sample.names_ITS <- sapply(strsplit(basename(fnFs_ITS), "_R"), `[`, 1)
+
+filtFs_ITS <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names_ITS, "_R1_filt_dada2.fastq.gz"))
+filtRs_ITS <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names_ITS, "_R2_filt_dada2.fastq.gz"))
+names(filtFs_ITS) <- sample.names_ITS
+names(filtRs_ITS) <- sample.names_ITS
+
+out_ITS <- filterAndTrim(fnFs_ITS, filtFs_ITS, fnRs_ITS, filtRs_ITS, maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress=TRUE, multithread=TRUE) 
+out_ITS
+
+save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/01_out_filt_split_ITS.rds")
+
+#load("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/01_out_filt_split_ITS.rds")
+
+errF_ITS <- learnErrors(filtFs_ITS, multithread=TRUE)
+errR_ITS <- learnErrors(filtRs_ITS, multithread=TRUE)
+save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/02_err_ITS.RData")
+dadaFs_ITS <- dada(filtFs_ITS, err=errF_ITS, multithread=TRUE)
+dadaRs_ITS <- dada(filtRs_ITS, err=errR_ITS, multithread=TRUE)
+save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/03_dada_ITS.RData")
+
+mergers_ITS <- mergePairs(dadaFs_ITS, filtFs_ITS, dadaRs_ITS, filtRs_ITS, verbose=TRUE)
+save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/04_mergers_ITS.RData")
+seqtab_ITS <- makeSequenceTable(mergers_ITS)
+seqtab.nochim_ITS <- removeBimeraDenovo(seqtab_ITS, method="consensus", multithread=TRUE, verbose=TRUE)
 
 
 
-# C. ONT read processing
-## 1. Bacteria
-### Cutadapt
+getN_ITS <- function(x) sum(getUniques(x))
+track_ITS <- cbind(out_ITS, sapply(dadaFs_ITS, getN_ITS), sapply(dadaRs_ITS, getN_ITS), sapply(mergers_ITS, getN_ITS), rowSums(seqtab.nochim_ITS))
+colnames(track_ITS) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track_ITS) <- sample.names_ITS
+track_ITS
+
+taxa_ITS <- assignTaxonomy(seqtab.nochim_ITS, "03_NOVASEQ_METAB/02_DATABASES/sh_general_UNITE_release_dynamic_25.07.2023.fasta",t
+ryRC=TRUE, multithread=TRUE)
+
+taxa.print_ITS <- taxa_ITS
+rownames(taxa.print_ITS) <- NULL
+
+# SAVE 
+save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/04_dada_pipeline_ITS.RData")
+saveRDS(taxa_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/05_taxa_ITS.rds")
+saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/06_seqtab.nochim_ITS.rds")
+
+
+```
+
+## C. ONT read processing
+### 1. Bacteria
+#### Cutadapt
 
 ```bash
 #!/usr/bin/env bash
@@ -212,8 +324,8 @@ t.fastq.gz; done
 ```
 
 
-## 2. Fungi
-### Cutadapt
+### 2. Fungi
+#### Cutadapt
 
 ```bash
 #!/usr/bin/env bash
@@ -248,15 +360,15 @@ do cutadapt -O ${#PRIMER_F} -e ${E} --discard-untrimmed --revcomp --report=minim
 
 
 
-# A. Map sample collection
+## A. Map sample collection
 
-## 0. Libraries
+### 0. Libraries
 ```r include=FALSE
 library(ggmap)
 library(ggplot2)
 ```
 
-## 1. Tables
+### 1. Tables
 ```r
 lieux <- data.frame(Lieux=c('Lieu 1', 'Lieu 2', 'Lieu 3'),
                              Latitude=c(48.84941, 48.85253, 48.85346),
@@ -267,7 +379,7 @@ villes <- data.frame(Lieux=c('Brest', 'Pleubian'),
                              Longitude=c(-4.47798, -3.15305))
 ```
 
-## 2. Maps
+### 2. Maps
 ```{r}
 register_stadiamaps("YOUR_API_KEY", write = TRUE)
 
