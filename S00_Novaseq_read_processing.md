@@ -1,12 +1,13 @@
 # NovaSeq read processing 
+
 ## Table of contents
 [1. Bacteria](#novaseq_bacteria)  
 - [Cutadapt](#novaseq_bacteria_cutadapt)  
-- [Split 16S/18S](novaseq_split)  
-- [DADA2 16S](novaseq_16S_dada2)  
-- [DADA2 18S](novaseq_18S_dada2)  
+- [Split 16S/18S](#novaseq_split)  
+- [DADA2 16S](#novaseq_16S_dada2)  
+- [DADA2 18S](#novaseq_18S_dada2)  
 [2. Fungi](#novaseq_fungi)  
-- Cutadapt](#novaseq_fungi_cutadapt)  
+- [Cutadapt](#novaseq_fungi_cutadapt)  
 - [DADA2](#novaseq_fungi_dada2)  
 
 ## 1. Bacteria <a name="novaseq_bacteria"></a>
@@ -200,6 +201,151 @@ saveRDS(seqtab.nochim_18S, "03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLI
 ochim_18S.rds")
 ```
 
+### Ps with 16S and 18S
+```r
+taxa_16S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_16S.rds")
+taxa_18S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_18S.rds")
+seqtab.nochim_16S <- readRDS("00_PHYLOSEQ_OBJECTS/00_seqtab.nochim_16S.rds")
+seqtab.nochim_18S <- readRDS("00_PHYLOSEQ_OBJECTS/00_seqtab.nochim_18S.rds")
+
+seqtab.nochim_16S <- seqtab.nochim_16S[-c(112,113,114),]
+
+seqtab.nochim_all <- cbind(seqtab.nochim_16S, seqtab.nochim_18S)
+dim(seqtab.nochim_all)[2] #74370
+
+taxa_18S %<>% as.data.frame() %>% dplyr::select(Kingdom, Division, Class, Order, Family, Genus) %>% as.matrix
+colnames(taxa_18S)[2] <- "Phylum"
+taxa_all <- rbind(taxa_16S, taxa_18S)
+
+
+sample <- sample_data(sample)
+ps <- phyloseq(otu_table(seqtab.nochim_all, taxa_are_rows = FALSE),
+               tax_table(taxa_all),sample )
+
+dna <- Biostrings::DNAStringSet(taxa_names(ps)) 
+names(dna) <- taxa_names(ps) 
+ps <- merge_phyloseq(dna, ps) 
+taxa_names(ps) <- paste0("ASV_", seq(ntaxa(ps))) 
+
+
+saveRDS(ps, "00_PHYLOSEQ_OBJECTS/01_ps.rds")
+```
+
+### Remove plastid reads
+```r
+tax <- ps_sup@tax_table %>% as.data.frame()
+
+mito <- tax %>% as.data.frame() %>% filter(Family=="Mitochondria") #1219
+otu_mito <- rownames(mito[1])
+
+chloro <- tax %>% as.data.frame() %>% filter(Order=="Chloroplast") #1225
+otu_chloroplast <- rownames(chloro[1])
+
+plas <- tax %>% as.data.frame() %>% filter(Kingdom=="Eukaryota:plas") #809
+otu_plas <- rownames(plas[1])
+
+all_ASV = taxa_names(ps_sup)
+all_ASV <- all_ASV[!(all_ASV %in% otu_chloroplast)]
+all_ASV <- all_ASV[!(all_ASV %in% otu_mito)]
+all_ASV <- all_ASV[!(all_ASV %in% otu_plas)]
+
+ps_sup_clean <- ps_sup
+ps_sup_clean=prune_taxa(all_ASV, ps_sup)
+ps_sup_clean
+
+ps_sup_clean = merge_phyloseq(ps_sup_clean, sample_data(sample))
+
+saveRDS(ps_sup_clean, "00_PHYLOSEQ_OBJECTS/03_ps_sup_clean.rds")
+```
+
+
+### Decontamination with Microdecon
+
+```r
+## change first column 
+tax <- ps_sup_clean@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "ASV"
+
+otu <- ps_sup_clean@otu_table %>% as.data.frame() 
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "ASV"
+
+
+otu %<>% as.data.frame() %>%  relocate("16S_T_neg_MARS_BACT_S275_R1", .before="16S_CECILE_1_AVRIL_BACT_S281_R1") 
+otu %<>% as.data.frame() %>%  relocate("16S_T_neg_pool_2_BACT_S274_R1", .before="16S_CECILE_1_AVRIL_BACT_S281_R1") 
+
+
+otu_tax <- merge(otu, tax)
+otu_tax %<>% unite("taxonomy", Kingdom:Genus, sep = ";")
+
+# Transform column in numeric
+otu_tax[, 2:124] <- sapply(otu_tax[, 2:124], as.numeric)
+
+clean_data <-  decon(data = otu_tax, numb.blanks = 3, numb.ind = c(120), taxa = TRUE, thresh = 1)
+
+#ps
+otu <- clean_data$decon.table %>% as.data.frame()
+otu %<>% select(-c(Mean.blank, taxonomy))
+
+otu2 <- otu[,-1]
+rownames(otu2) <- otu[,1]
+
+rm(otu)
+otu <- otu2
+rm(otu2)
+
+otu <- as.matrix(otu)
+
+
+OTU = otu_table(otu, taxa_are_rows = TRUE)
+ 
+ps_decon <- phyloseq(OTU, ps_sup_clean@sam_data, ps_sup_clean@tax_table, ps_sup_clean@refseq)
+ps_decon
+
+saveRDS(ps_decon, "00_PHYLOSEQ_OBJECTS/04_ps_decon.rds")
+```
+
+### Remove Homopolymer
+```r
+ref <- ps_decon@refseq %>% as.data.frame()
+colnames(ref)[1] <- "sequence"
+ref <- cbind(rownames(ref), ref)
+rownames(ref) <- NULL
+colnames(ref)[1] <- "ASV"
+
+tax <- ps_decon@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "ASV"
+
+otu <- ps_decon@otu_table %>% as.data.frame() 
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "ASV"
+
+ref_tax <- merge(tax, ref, by="ASV")
+otu_tax_ref <- merge(otu, ref_tax, by="ASV")
+write.table(otu_tax_ref, "01_Tables/05_otu_tax_ref_after_microdecon.csv", sep=";", quote=FALSE)
+# in this table, remove by hand all sequences which starts with more than 5 C. 
+
+
+otu_tax_ref <- read_tsv("01_Tables/07_otu_tax_ref_without_homopolymer.tsv")
+otu_tax_ref %<>% tibble::column_to_rownames("ASV")
+
+otu <- otu_tax_ref %>% dplyr::select(`16S_CECILE_1_AVRIL_BACT_S281_R1`:`16S_R5_male_BACT_S270_R1`) %>% as.matrix()
+tax <- otu_tax_ref %>% dplyr::select(Kingdom:Genus) %>% as.matrix()
+
+OTU <- otu_table(otu, taxa_are_rows = TRUE)
+TAX <- tax_table(tax)
+
+ps_decon_wt_cc <- phyloseq(OTU, TAX, ps_decon@refseq, ps_decon@sam_data)
+
+saveRDS(ps_decon_wt_cc, "00_PHYLOSEQ_OBJECTS/05_ps_wt_homopoly.rds")
+```
+
 ### Remove chimeras vsearch
 ```bash
 #!/usr/bin/env bash
@@ -221,6 +367,75 @@ output_no_chimera=03_NOVASEQ_METAB/03_BACTERIA_ANALYSIS/02_ALL/02_SPLIT_16S_18S_
 db=databases/SILVA_138.1_SSURef_NR99_tax_silva.fasta
 
 vsearch --threads 3 --uchime_ref ${input} --chimera ${output_chimera} --nonchimeras ${output_no_chimera} --db ${db}
+```
+
+```r
+asv_no_chimera <- read.table("01_Tables/08_asv_no_chimera.tsv", sep="\t", header=FALSE, row.names = 1)
+asv_no_chimera <- rownames(asv_no_chimera[2])
+
+all_ASV = taxa_names(ps_decon_wt_cc)
+
+all_ASV <- all_ASV[(all_ASV %in% asv_no_chimera)]
+
+ps_decon_wt_cc_no_chimera <- ps_decon_wt_cc
+ps_decon_wt_cc_no_chimera=prune_taxa(all_ASV, ps_decon_wt_cc)
+ps_decon_wt_cc_no_chimera
+
+saveRDS(ps_decon_wt_cc_no_chimera, "00_PHYLOSEQ_OBJECTS/06_ps_no_chimeras.rds")
+```
+
+### Identity Ascophyllum ASVs
+
+```r
+ref <- ps_decon_wt_cc_no_chimera@refseq %>% as.data.frame()
+colnames(ref)[1] <- "sequence"
+ref <- cbind(rownames(ref), ref)
+rownames(ref) <- NULL
+colnames(ref)[1] <- "ASV"
+
+tax <- ps_decon_wt_cc_no_chimera@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "ASV"
+
+otu <- ps_decon_wt_cc_no_chimera@otu_table %>% as.data.frame() 
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "ASV"
+
+ref_tax <- merge(tax, ref, by="ASV")
+otu_tax_ref <- merge(otu, ref_tax, by="ASV")
+write.table(otu_tax_ref, "01_Tables/09_otu_tax_ref_after_vsearch.csv", sep=";", quote=FALSE)
+
+#all Silvetia + Fucus has been merged + ASV_73217, ASV_70703,ASV_71087, ASV_71721, ASV_70539, ASV_70858,  ASV_71415, ASV_70581, ASV_71374, ASV_73644 as there 99% identity with fucus or silvetia. (clustering did with vsearch)
+
+asco <- read_tsv("01_Tables/10_otu_tax_ref_after_vsearch_1asv_asco.tsv")
+  
+otu <- asco %>% dplyr::select(ASV,`16S_CECILE_1_AVRIL_BACT_S281_R1`:`16S_R5_male_BACT_S270_R1`)
+otu %<>% tibble::column_to_rownames("ASV") %>% as.matrix()
+tax <- asco %>% dplyr::select(ASV,Kingdom:Genus) 
+tax %<>% tibble::column_to_rownames("ASV") %>% as.matrix()
+
+OTU <- otu_table(otu, taxa_are_rows = TRUE)
+TAX <- tax_table(tax)
+
+ps_decon_asco <- phyloseq(OTU, TAX, ps_decon_wt_cc_no_chimera@refseq, ps_decon_wt_cc_no_chimera@sam_data)
+
+saveRDS(ps_decon_asco, "00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
+```
+
+### Final novaseq ps object for sequencing comparison
+
+```r
+ps_decon_asco <- readRDS("../01_Microdecon_all/00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
+sample <- read.table("01_Tables/01_samples_sites.csv", sep=";", header=TRUE, dec=".", row.names = 1)
+
+ps_sites_asco = phyloseq(ps_decon_asco@otu_table, ps_decon_asco@tax_table, ps_decon_asco@refseq, sample_data(sample))
+
+ps_sites_asco = filter_taxa(ps_sites_asco, function(x) sum(x) > 0, TRUE)
+ps_sites_asco
+
+saveRDS(ps_sites_asco,"00_PHYLOSEQ_OBJECTS/04_ps_sites_asco.rds")
 ```
 
 ## 2. Fungi <a name="novaseq_fungi"></a>
