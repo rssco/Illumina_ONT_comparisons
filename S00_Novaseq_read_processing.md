@@ -9,14 +9,18 @@
 - [Phyloseq with 16S and 18S](#ps_16S_18S) 
 - [Remove plastid reads](#novaseq_remove_plastid) 
 - [Decontamination with Microdecon](#novaseq_microdecon) 
-- [Remove Homopolymer](#novaseq_homopolymer) 
+- [Remove homopolymer](#novaseq_homopolymer) 
 - [Remove chimeras vsearch](#novaseq_vsearch) 
 - [Identity Ascophyllum ASVs](#novaseq_asco) 
-- [Final novaseq ps object for sequencing comparison](#novaseq_ps_final) 
+- [Final 16S/18S ps object for sequencing comparison](#novaseq_ps_final) 
   
 [2. Fungi](#novaseq_fungi)  
 - [Cutadapt](#novaseq_fungi_cutadapt)  
 - [DADA2](#novaseq_fungi_dada2)  
+- [Phyloseq object ITS](#ps_its) 
+- [Clean tax table](#clean_tax_table)
+- [Remove homopolymer](#remove_homopolymer) 
+- [Final ITS ps object for sequencing comparison](#ps_final) 
 
 
 ## 1. Bacteria <a name="novaseq_bacteria"></a>
@@ -529,7 +533,7 @@ saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUT
 ```
 
 
-### Phyloseq object ITS 
+### Phyloseq object ITS <a name="ps_its" ></a>
 ```r
 taxa_ITS <- readRDS("02_Phyloseq_objects/00_taxa_ITS.rds")
 seqtab.nochim_ITS <- readRDS("02_Phyloseq_objects/00_seqtab.nochim_ITS.rds")
@@ -548,7 +552,7 @@ ps
 saveRDS(ps, "02_Phyloseq_objects/01_ps.rds")
 ```
 
-### Clean tax table
+### Clean tax table <a name="clean_tax_table" ></a>
 
 ```r
 tax_table(ps)[tax_table(ps) == "p__Fungi_phy_Incertae_sedis"] <- NA
@@ -624,7 +628,7 @@ tax_table(ps)[tax_table(ps) == "g__Elsinoaceae_gen_Incertae_sedis"] <- NA
 saveRDS(ps, "02_Phyloseq_objects/02_ps_without_incertae.rds")
 ```
 
-### Remove homopolymer
+### Remove homopolymer <a name="remove_homopolymer" ></a>
 ```r
 tax <- ps@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
@@ -662,7 +666,7 @@ ps_decon_wt_cc <- phyloseq(OTU, TAX, ps@refseq, ps_decon@sam_data)
 saveRDS(ps_decon_wt_cc, "02_Phyloseq_objects/03_ps_ss_decon_wt_cc.rds")
 ```
 
-### Final ONT ps object for sequencing comparison 
+### Final ps object for sequencing comparison <a name="ps_final" ></a>
 
 ```r
 ps_decon_wt_mock <- subset_samples(ps_decon, !Type=="Mock")
