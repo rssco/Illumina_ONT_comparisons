@@ -6,9 +6,15 @@
 - [Split 16S/18S](#novaseq_split)  
 - [DADA2 16S](#novaseq_16S_dada2)  
 - [DADA2 18S](#novaseq_18S_dada2)  
+
 [2. Fungi](#novaseq_fungi)  
 - [Cutadapt](#novaseq_fungi_cutadapt)  
 - [DADA2](#novaseq_fungi_dada2)  
+
+
+| [Bacteria](#novaseq_bacteria) | [Fungi](#novaseq_fungi)   |
+|----------|----------|
+| - [Cutadapt](#novaseq_bacteria_cutadapt)\[Split 16S/18S](#novaseq_split) | - [Cutadapt](#novaseq_fungi_cutadapt)   |
 
 ## 1. Bacteria <a name="novaseq_bacteria"></a>
 
