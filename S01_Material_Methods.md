@@ -1,9 +1,195 @@
 ## A. MiSeq read processing
+### 1. Bacteria
+#### DADA2
+
+```r
+# Library
+library(tidyverse)
+library(dada2)
+library(DECIPHER)
+
+# Data
+path="300_200/01_BACTERIA/"
+files <- list.files(path)
+
+path_filt="300_200/01_BACTERIA/01_CLEANED_DATA/"
+filtRs <- list.files(path_filt, pattern = "_R_filt.fastq.gz", full.names = TRUE)
+filtFs <- list.files(path_filt, pattern = "_F_filt.fastq.gz", full.names = TRUE)
+
+fnFs <- sort(list.files(path, pattern="_R1_001.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2_001.fastq.gz", full.names = TRUE))
 
 
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+
+filtFs <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "01_CLEANED_DATA/", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(300,200),
+              maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, trimLeft=c(17,19),
+              compress=TRUE, multithread=TRUE) 
+
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 
 
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+track
 
+taxa <- assignTaxonomy(seqtab.nochim, "silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
+taxa.print <- taxa # Removing sequence rownames for display only
+rownames(taxa.print) <- NULL
+head(taxa.print)
+```
+
+### 2. Fungi
+#### Cutadapt
+```r
+#Library
+library(dada2)
+library(ShortRead)
+library(Biostrings)
+library(parallel)
+
+# Data
+path <- "02_Sequences/"
+path_filt <- "02_Sequences/filtN/"
+path.cut <- "02_Sequences/cutadapt/"
+fnFs <- sort(list.files(path, pattern = "R1_001.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern = "R2_001.fastq.gz", full.names = TRUE))
+
+# Identify primers
+FWD <- "AACTTTYRRCAAYGGATCWCT" 
+REV <- "AGCCTCCCGCTTATTGATATGCTTAART"  
+
+allOrients <- function(primer) {
+    # Create all orientations of the input sequence
+    require(Biostrings)
+    dna <- DNAString(primer)  # The Biostrings works w/ DNAString objects rather than character vectors
+    orients <- c(Forward = dna, Complement = complement(dna), Reverse = reverse(dna), 
+        RevComp = reverseComplement(dna))
+    return(sapply(orients, toString))  # Convert back to character vector
+}
+FWD.orients <- allOrients(FWD)
+REV.orients <- allOrients(REV)
+FWD.orients
+
+source("https://raw.githubusercontent.com/benjjneb/dada2/master/R/filter.R")
+source("https://raw.githubusercontent.com/benjjneb/dada2/master/R/RcppExports.R")
+
+path_filt="02_Sequences/filtN/"
+
+fnFs.filtN <- list.files(path_filt, pattern = "_R1_001.fastq.gz", full.names=TRUE) 
+fnRs.filtN <- list.files(path_filt, pattern = "_R2_001.fastq.gz", full.names=TRUE) 
+
+fnFs.filtN <- file.path(path, "filtN", basename(fnFs)) # Put N-filterd files in filtN/ subdirectory
+fnRs.filtN <- file.path(path, "filtN", basename(fnRs))
+filterAndTrim(fnFs, fnFs.filtN, fnRs, fnRs.filtN, maxN = 0, multithread = TRUE) 
+
+
+# Cutadapt
+primerHits <- function(primer, fn) {
+    # Counts number of reads in which the primer is found
+    nhits <- vcountPattern(primer, sread(readFastq(fn)), fixed = FALSE)
+    return(sum(nhits > 0))
+}
+rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.filtN[[1]]), 
+    FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.filtN[[1]]), 
+    REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.filtN[[1]]), 
+    REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.filtN[[1]]))
+
+#path to cutadapt
+cutadapt <- "../Library/Python/3.9/bin/cutadapt"
+
+# Remove primers with cutadapt
+
+path.cut <- file.path(path, "cutadapt")
+if(!dir.exists(path.cut)) dir.create(path.cut)
+fnFs.cut <- file.path(path.cut, basename(fnFs))
+fnRs.cut <- file.path(path.cut, basename(fnRs))
+
+FWD.RC <- dada2:::rc(FWD)
+REV.RC <- dada2:::rc(REV)
+# Trim FWD and the reverse-complement of REV off of R1 (forward reads)
+R1.flags <- paste("-g", FWD, "-a", REV.RC) 
+# Trim REV and the reverse-complement of FWD off of R2 (reverse reads)
+R2.flags <- paste("-G", REV, "-A", FWD.RC) 
+# Run Cutadapt
+for(i in seq_along(fnFs)) {
+  system2(cutadapt, args = c(R1.flags, R2.flags, "-n", 2, # -n 2 required to remove FWD and REV from reads
+                             "-o", fnFs.cut[i], "-p", fnRs.cut[i], # output files
+                             fnFs.filtN[i], fnRs.filtN[i])) # input files
+}
+
+# Verify no more primers}
+rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[1]]), 
+    FWD.ReverseReads = sapply(FWD.orients, primerHits, fn = fnRs.cut[[1]]), 
+    REV.ForwardReads = sapply(REV.orients, primerHits, fn = fnFs.cut[[1]]), 
+    REV.ReverseReads = sapply(REV.orients, primerHits, fn = fnRs.cut[[1]]))
+```
+
+#### DADA2
+
+```r
+cutFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
+cutRs <- sort(list.files(path.cut, pattern = "R2_001.fastq.gz", full.names = TRUE))
+
+# Extract sample names, assuming filenames have format:
+get.sample.name <- function(fname) strsplit(basename(fname), "_")[[1]][1]
+sample.names <- unname(sapply(cutFs, get.sample.name))
+sample.names
+
+iltFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
+filtRs <- sort(list.files(path.cut, pattern = "R2_001.fastq.gz", full.names = TRUE))
+
+path_cutadapt_filt="02_Sequences/cutadapt/filtered/"
+
+filtFs <- file.path(path.cut, "filtered", basename(cutFs))
+filtRs <- file.path(path.cut, "filtered", basename(cutRs))
+
+
+out <- filterAndTrim(cutFs, filtFs, cutRs, filtRs, truncLen=c(260,230), maxN=0, maxEE=c(2,5), truncQ=2, minLen = 50, rm.phix=TRUE,compress=TRUE, multithread=TRUE) 
+
+errF <- learnErrors(filtFs, multithread = TRUE)
+errR <- learnErrors(filtRs, multithread = TRUE)
+derepFs <- derepFastq(filtFs, verbose = TRUE)
+derepRs <- derepFastq(filtRs, verbose = TRUE)
+dadaFs <- dada(derepFs, err = errF, multithread = TRUE)
+dadaRs <- dada(derepRs, err = errR, multithread = TRUE)
+
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, 
+    getN), rowSums(seqtab.nochim))
+# If processing a single sample, remove the sapply calls: e.g. replace
+# sapply(dadaFs, getN) with getN(dadaFs)
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", 
+    "nonchim")
+rownames(track) <- sample.names
+track
+
+unite.ref <- "03_Databases/sh_general_release_dynamic_25.07.2023.fasta "  
+taxa <- assignTaxonomy(seqtab.nochim, unite.ref, multithread = TRUE, tryRC = TRUE)
+taxa.print <- taxa # Removing sequence rownames for display only
+rownames(taxa.print) <- NULL
+head(taxa.print)
+
+saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
+```
 
 ## B. NovaSeq read processing
 ### 1. Bacteria
