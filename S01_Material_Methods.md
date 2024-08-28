@@ -1,11 +1,11 @@
 # Read processing for MiSeq, NovaSeq and ONT
 
 Table of content
-[A. MiSeq read processing](## A. MiSeq read processing)
+[A. MiSeq read processing](#miseq)
 [B. NovaSeq read processing](## B. NovaSeq read processing)
 [C. ONT read processing ](## C. ONT read processing)
 
-## A. MiSeq read processing
+## A. MiSeq read processing <a name="miseq"></a>
 ### 1. Bacteria
 #### DADA2
 
