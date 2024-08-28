@@ -317,7 +317,7 @@ ps_decon
 saveRDS(ps_decon, "00_PHYLOSEQ_OBJECTS/04_ps_decon.rds")
 ```
 
-### Remove Homopolymer <a name="novaseq_homopolymer"></a>
+### Remove homopolymer <a name="novaseq_homopolymer"></a>
 ```r
 ref <- ps_decon@refseq %>% as.data.frame()
 colnames(ref)[1] <- "sequence"
@@ -526,4 +526,148 @@ rownames(taxa.print_ITS) <- NULL
 save.image("03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/04_dada_pipeline_ITS.RData")
 saveRDS(taxa_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/05_taxa_ITS.rds")
 saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUTS/06_seqtab.nochim_ITS.rds")
+```
+
+
+### Phyloseq object ITS 
+```r
+taxa_ITS <- readRDS("02_Phyloseq_objects/00_taxa_ITS.rds")
+seqtab.nochim_ITS <- readRDS("02_Phyloseq_objects/00_seqtab.nochim_ITS.rds")
+sample <- read.table("03_Tables/01_sample.csv", sep=";", header = TRUE, row.names = 1)
+
+sample <- sample_data(sample)
+ps <- phyloseq(otu_table(seqtab.nochim_ITS, taxa_are_rows = FALSE),
+               tax_table(taxa_ITS),sample )
+
+dna <- Biostrings::DNAStringSet(taxa_names(ps)) 
+names(dna) <- taxa_names(ps) 
+ps <- merge_phyloseq(dna, ps) 
+taxa_names(ps) <- paste0("ASV_", seq(ntaxa(ps))) 
+ps
+
+saveRDS(ps, "02_Phyloseq_objects/01_ps.rds")
+```
+
+### Clean tax table
+
+```r
+tax_table(ps)[tax_table(ps) == "p__Fungi_phy_Incertae_sedis"] <- NA
+
+
+tax_table(ps)[tax_table(ps) == "c__Fungi_cls_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "c__Chytridiomycota_cls_Incertae_sedis"] <- NA
+
+tax_table(ps)[tax_table(ps) == "c__Basidiomycota_cls_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "c__Rozellomycotina_cls_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "c__Pezizomycotina_cls_Incertae_sedis"] <- NA
+
+
+tax_table(ps)[tax_table(ps) == "f__Chytridiomycota_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Fungi_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Hypocreales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Saccharomycetales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Basidiomycota_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Agaricales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Rozellomycotina_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Spizellomycetales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Pezizomycotina_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Sebacinales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Pleosporales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Microstromatales_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Microbotryomycetes_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__GS11_fam_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "f__Erythrobasidiales_fam_Incertae_sedis"] <- NA
+
+
+tax_table(ps)[tax_table(ps) == "o__Fungi_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Chytridiomycota_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Basidiomycota_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Rozellomycotina_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Spizellomycetales_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Cystobasidiomycetes_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Microbotryomycetes_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Pezizomycotina_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Sordariomycetes_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Sebacinales_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Pleosporales_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Sebacinales_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Sebacinales_ord_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "o__Sebacinales_ord_Incertae_sedis"] <- NA
+
+tax_table(ps)[tax_table(ps) == "g__Malasseziaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Chytridiomycota_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Fungi_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Basidiomycota_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Ustilaginaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Agaricaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Rozellomycotina_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Spizellomycetales_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Cystobasidiomycetes_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Microbotryomycetes_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Pezizomycotina_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Sordariomycetes_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Sebacinales_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Pleosporales_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Tetraplosphaeriaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Sclerotiniaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Protomycetaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Leucosporidiaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Hypocreales_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Pleosporaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__GS11_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Chrysozymaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Calloriaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Bionectriaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Catabotrydaceae_gen_Incertae_sedis"] <- NA
+tax_table(ps)[tax_table(ps) == "g__Elsinoaceae_gen_Incertae_sedis"] <- NA
+
+saveRDS(ps, "02_Phyloseq_objects/02_ps_without_incertae.rds")
+```
+
+### Remove homopolymer
+```r
+tax <- ps@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "ASV"
+
+ref <- ps@refseq %>% as.data.frame()
+colnames(ref)[1] <- "sequence"
+ref <- cbind(rownames(ref), ref)
+rownames(ref) <- NULL
+colnames(ref)[1] <- "ASV"
+
+otu <- ps@otu_table %>% t() %>% as.data.frame()
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "ASV"
+
+ref_tax <- merge(tax, ref, by="ASV")
+otu_tax_ref <- merge(otu, ref_tax, by="ASV")
+write.table(otu_tax_ref, "03_Tables/02_otu_tax_ref_without_microdecon.csv", sep=";", quote=FALSE)
+# in this table, remove by hand all sequences which starts with more than 5 C. 
+
+
+otu_tax_ref <- read_tsv("03_Tables/03_otu_tax_ref_sans_microdecon_wt_cc.tsv")
+otu_tax_ref %<>% tibble::column_to_rownames("ASV")
+
+otu <- otu_tax_ref %>% dplyr::select(CECILE_1_AVRIL_FUNGI_S321_R1:R5_male_FUNGI_S310_R1) %>% as.matrix()
+tax <- otu_tax_ref %>% dplyr::select(Kingdom:Species) %>% as.matrix()
+
+OTU <- otu_table(otu, taxa_are_rows = TRUE)
+TAX <- tax_table(tax)
+
+ps_decon_wt_cc <- phyloseq(OTU, TAX, ps@refseq, ps_decon@sam_data)
+
+saveRDS(ps_decon_wt_cc, "02_Phyloseq_objects/03_ps_ss_decon_wt_cc.rds")
+```
+
+### Final ONT ps object for sequencing comparison 
+
+```r
+ps_decon_wt_mock <- subset_samples(ps_decon, !Type=="Mock")
+ps_decon_wt_mock = filter_taxa(ps_decon_wt_mock, function(x) sum(x) > 0, TRUE)
+ps_decon_wt_mock
+
+saveRDS(ps_decon_wt_mock, "02_Phyloseq_objects/04_ps_ss_decon_wt_cc_mock.rds")
 ```
