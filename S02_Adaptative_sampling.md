@@ -6,12 +6,12 @@ Same parameters with and without adaptative sampling
 https://gitlab.ifremer.fr/bioinfo/workflows/samba
  
 Changes in conf/nanopore.config
-> Minimum length of raw nanopore reads to keep: nanopore_read_minlength = "0"
-> Maximale length of raw nanopore reads to keep: nanopore_read_maxlength = "100000"
-> minimap2_db = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_SEQ_k15.mmi"
-> ref_tax = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_TAX.txt"
-> Taxonomic level to analyse data. Can be: Kingdom;Phylum;Class;Order;Genus;Species: tax_rank = "Species"
-> Define the Kingdom studied e.g for 16S nanopore reads: "Bacteria" or for 18S nanopore reads: "Eukaryota": kingdom = "Bacteria"
+> Minimum length of raw nanopore reads to keep: nanopore_read_minlength = "0"  
+> Maximale length of raw nanopore reads to keep: nanopore_read_maxlength = "100000"  
+> minimap2_db = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_SEQ_k15.mmi"  
+> ref_tax = "../finalresult/02_ONT/06_SAMBA/samba/database/silva_v138.1_16S_NR99_TAX.txt"  
+> Taxonomic level to analyse data. Can be: Kingdom;Phylum;Class;Order;Genus;Species: tax_rank = "Species"  
+> Define the Kingdom studied e.g for 16S nanopore reads: "Bacteria" or for 18S nanopore reads: "Eukaryota": kingdom = "Bacteria"  
 
 ```bash
 #!/usr/bin/env bash
