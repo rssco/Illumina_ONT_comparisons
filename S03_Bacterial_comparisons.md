@@ -1,5 +1,5 @@
 # Mock analysis with IDTAXA, SAMBA and KRAKEN2 
-## 1. Library
+## 0. Library
 ```r
 library(tidyverse)
 library(magrittr)
@@ -11,6 +11,14 @@ library(paletteer)
 library(ggh4x)
 library(colorspace)
 library(gghighlight)
+```
+
+## 1. Tables 
+
+```r
+kraken <- read.table("02_Tables/01_abundance_table_kraken2.csv", sep=";", header=TRUE, dec = ".", row.names = 1)
+ps_samba <- readRDS("02_Tables/02_phyloseq_samba_all_assignation_Species.rds")
+idtaxa <- read.table("02_Tables/03_idtaxa_abundance_table.csv", sep=";", header=TRUE, dec=".", row.names = 1)
 ```
 
 ## 2. Transform tables
