@@ -7,6 +7,7 @@
 - [Decontamination with microdecon](#miseq_decontamination)  
 - [Remove mock](#miseq_remove_mock)  
 - [Remove plastid reads](#miseq_remove_plastid_reads)  
+  
 [2. Fungi](#miseq_fungi)  
 - [Cutadapt](#miseq_fungi_cutadapt)  
 - [DADA2](#miseq_fungi_dada2)  
