@@ -1,11 +1,18 @@
 # MiSeq read processing
 
 ## Table of content  
-[Bacteria](##miseq_bacteria)  
-- [DADA2](###miseq_bacteria_dada2)  
-[Fungi](#miseq_fungi)  
+[1. Bacteria](#miseq_bacteria)  
+- [DADA2](#miseq_bacteria_dada2)   
+- [Phyloseq](#miseq_phyloseq)  
+- [Decontamination with microdecon](#miseq_decontamination)  
+- [Remove mock](#miseq_remove_mock)  
+- [Remove plastid reads](#miseq_remove_plastid_reads)  
+[2. Fungi](#miseq_fungi)  
 - [Cutadapt](#miseq_fungi_cutadapt)  
 - [DADA2](#miseq_fungi_dada2)  
+- [Phyloseq](#miseq_fungi_ps)
+- [Decontamination with Micrdecon](#miseq_fungi_microdecon)
+- [Remove mock](#miseq_fungi_remove_mock)
 
 
 ## 1. Bacteria <a name="miseq_bacteria"></a>
@@ -63,7 +70,7 @@ rownames(taxa.print) <- NULL
 head(taxa.print)
 ```
 
-### Phyloseq and decontamination <a name="miseq_bacteria_phyloseq"></a>
+### Phyloseq <a name="miseq_phyloseq"></a>
 
 Ps construction
 ```r
@@ -84,7 +91,7 @@ taxa_names(ps) <- paste0("OTU", seq(ntaxa(ps)))
 saveRDS(ps, "00_Phyloseq_objects/01_ps.rds")
 ```
 
-Decontamination with microdecon
+### Decontamination with microdecon <a name="miseq_decontamination"></a>
 ```r
 tax <- ps@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
@@ -135,13 +142,13 @@ samples = sample_data(sample)
 ps_decon <- phyloseq(OTU, TAX, samples)
 ```
 
-Remove mock
+### Remove mock <a name="miseq_remove_mock"></a>
 ```r
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-mars", ps_decon)
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-nov", ps_decon)
 ```
 
-Remove plastid reads
+### Remove plastid reads <a name="miseq_remove_plastid_reads"></a>
 ```r
 tax <- ps_decon_wt_mock@tax_table %>% as.data.frame()
 
@@ -300,4 +307,89 @@ head(taxa.print)
 
 # SAVE
 saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
+```
+
+### Phyloseq object construction <a name="miseq_fungi_ps"></a>
+
+```r
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows = FALSE),
+               sample_data(sample),
+               tax_table(taxa))
+
+dna <- Biostrings::DNAStringSet(taxa_names(ps)) 
+names(dna) <- taxa_names(ps) 
+ps <- merge_phyloseq(ps, dna) 
+taxa_names(ps) <- paste0("OTU", seq(ntaxa(ps))) 
+
+saveRDS(ps, "05_Envi_Phyloseq_object/04_ps.rds" )
+```
+
+
+### Decontamination with Microdecon <a name="miseq_fungi_microdecon"></a>
+
+```r
+## change first column 
+tax <- ps@tax_table %>% as.data.frame()
+tax <- cbind(rownames(tax), tax)
+rownames(tax) <- NULL
+colnames(tax)[1] <- "otu_id"
+
+otu <- ps@otu_table %>% as.data.frame() %>% t()
+otu <- cbind(rownames(otu), otu)
+rownames(otu) <- NULL
+colnames(otu)[1] <- "otu_id"
+
+
+otu %<>% as.data.frame() %>%  relocate("T-neg-NOV-FUNGI", .before="L1I1-MARS-FUNGI") 
+otu %<>% as.data.frame() %>%  relocate("T-neg-MARS-FUNGI", .before="L1I1-MARS-FUNGI")
+
+
+otu_tax <- merge(otu, tax)
+otu_tax %<>% unite("taxonomy", Kingdom:Species, sep = ";")
+
+# Transform column in numeric
+otu_tax[, 2:29] <- sapply(otu_tax[, 2:29], as.numeric)
+
+
+clean_data <-  decon(data = otu_tax, numb.blanks = 2, numb.ind = c(24,2), taxa = TRUE, thresh = 1)
+```
+
+New ps object, decontaminated + saving
+```r
+#recup tables from ps 
+tax <- ps@tax_table %>% as.data.frame()
+otu <- clean_data$decon.table %>% as.data.frame()
+sample <- ps@sam_data %>% as.data.frame()
+otu %<>% select(-c(Mean.blank, taxonomy))
+
+#First column as rownames
+otu2 <- otu[,-1]
+rownames(otu2) <- otu[,1]
+
+rm(otu)
+otu <- otu2
+rm(otu2)
+
+#transform tables
+otu <- as.matrix(otu)
+tax <- as.matrix(tax)
+
+OTU = otu_table(otu, taxa_are_rows = TRUE)
+TAX = tax_table(tax)
+samples = sample_data(sample)
+ 
+#Make new ps object  
+ps_decon <- phyloseq(OTU, TAX, samples, ps@refseq)
+
+saveRDS(ps_decon, "05_Envi_Phyloseq_object/05_ps_decon.rds")
+```
+
+### Remove mock <a name="miseq_fungi_remove_mock"></a>
+
+```r
+ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-FUNGI-mars", ps_decon)
+ps_decon_wt_mock <- prune_samples(sample_names(ps_decon_wt_mock) != "MOCK-FUNGI-nov", ps_decon_wt_mock)
+ps_miseq <- ps_decon_wt_mock
+
+saveRDS(ps_decon_wt_mock, "05_Envi_Phyloseq_object/06_ps_decon_wtout_mock.rds")
 ```
