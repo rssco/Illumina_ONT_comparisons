@@ -1,5 +1,4 @@
-# Performed assignation with SAMBA on Slurm cluster
-## 1. SAMBA assignation with and without adaptative sampling
+# Performed assignation with SAMBA on Slurm cluster 
 
 Same parameters with and without adaptative sampling
 
