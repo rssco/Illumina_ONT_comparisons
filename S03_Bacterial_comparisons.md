@@ -64,7 +64,7 @@ SAMPLE = sample_data(sample)
 ps_idtaxa_samba_kraken2 <- phyloseq(OTU, TAX, SAMPLE)
 ps_idtaxa_samba_kraken2
 ```
-# SAVE 
+## SAVE 
 ```r
 saveRDS(ps_idtaxa_samba_kraken2, "00_Phyloseq_objects/01_ps_idtaxa_samba_kraken2.rds")
 
@@ -73,7 +73,7 @@ ps_idtaxa_samba_kraken2 <- subset_samples(ps_idtaxa_samba_kraken2, ID!="MOCK_NOV
 saveRDS(ps_idtaxa_samba_kraken2, "00_Phyloseq_objects/02_ps_idtaxa_samba_kraken2_ssNOV_L2I4.rds")
 ```
 
-## 3. Mock analysis 
+## 3. Plot mock comparisons 
 ### Plot Order
 ```r
 ps_mock <- subset_samples(ps_idtaxa_samba_kraken2, Individual=="MOCK")
