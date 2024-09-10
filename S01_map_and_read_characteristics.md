@@ -1,4 +1,10 @@
-## A. Map sample collection
+## Table of contents
+[A. Map sample collection](#sample_map)  
+[B. Read sequencing characteristics](#read_char)
+
+
+
+## A. Map sample collection <a name="sample_map" ></a>
 
 ### 0. Libraries
 ```r include=FALSE
@@ -40,7 +46,7 @@ Brittany <- get_stadiamap(bbox = c(left = -5, bottom = 47.5, right = -3, top = 4
 
 
 
-## B. Read sequencing characteristics 
+## B. Read sequencing characteristics <a name="read_char" ></a>
 
 ```r
 library(ggplot2)
