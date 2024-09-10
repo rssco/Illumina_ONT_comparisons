@@ -11,7 +11,6 @@
   
 [2. Fungi](#ont_fungi)  
 - [Cutadapt](#ont_fungi_cutadapt)  
-- [DADA2](#ont_fungi_cutadapt)  
 - [NGSpeciesID](#ont_fungi_NGSpeciesID)
 
 
