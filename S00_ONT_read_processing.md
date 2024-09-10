@@ -71,7 +71,8 @@ do cutadapt -O ${#PRIMER_F} -e ${E} --max-average-error-rate ${MAE} -m ${MIN_LEN
 ### SAMBA <a name="ont_bacteria_samba"></a>
 https://gitlab.ifremer.fr/bioinfo/workflows/samba
 
-Filtering length=1000-2000, silva_v138.1_16S_NR99_SEQ_k15 and silva_v138.1_16S_NR99_TAX.txt for minimap2_db in "nanopore.config"  
+- Filtering length=1000-2000  
+- silva_v138.1_16S_NR99_SEQ_k15 and silva_v138.1_16S_NR99_TAX.txt for minimap2_db in "nanopore.config"  
 
 ```bash
 #!/usr/bin/env bash
