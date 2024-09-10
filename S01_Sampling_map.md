@@ -11,25 +11,19 @@ library(ggplot2)
 lieux <- data.frame(Lieux=c('Lieu 1', 'Lieu 2', 'Lieu 3'),
                              Latitude=c(48.84941, 48.85253, 48.85346),
                              Longitude=c(-3.078291, -3.075012, -3.077533))
-
-villes <- data.frame(Lieux=c('Brest', 'Pleubian'),
-                             Latitude=c(48.40, 48.81),
-                             Longitude=c(-4.47798, -3.15305))
 ```
 
 ### 2. Maps
 ```{r}
 register_stadiamaps("YOUR_API_KEY", write = TRUE)
 
-Pleubian <- get_stadiamap(bbox = c(left = -3.095, bottom = 48.846, right = -3.060, top = 48.8641), zoom = 16, maptype = "stamen_watercolor") %>% ggmap() + 
-  geom_point(data=lieux, aes(x = Longitude, y=Latitude),size=1.5) +
-  geom_text(aes(x=Longitude, y=Latitude, label=Lieux), data=lieux, hjust=1.2, size=2.5) +
-  xlab(expression(paste("Longitude"))) +
-  ylab(expression(paste("Latitude"))) +
+France <- get_stadiamap( bbox = c(left = -6, bottom = 41, right = 10, top = 52), zoom = 6, maptype = "stamen_watercolor")
+ggmap(France) + 
+  theme_void()+
   theme(
     plot.title = element_text(colour = "orange"), 
     panel.border = element_rect(colour = "grey", fill=NA, size=2)
-  )
+  )+ pdf("Figures/01_France.pdf", height = 5, width = 5)
 
 Brittany <- get_stadiamap(bbox = c(left = -5, bottom = 47.5, right = -3, top = 49), zoom = 9, maptype = "stamen_watercolor") %>% ggmap() + 
   geom_point(data=villes, aes(x = Longitude, y=Latitude),size=1.5) +
