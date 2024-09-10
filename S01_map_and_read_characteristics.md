@@ -37,3 +37,36 @@ Brittany <- get_stadiamap(bbox = c(left = -5, bottom = 47.5, right = -3, top = 4
 ```
 
 ![Figure 1 | Sampling locations.](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/01_Figures/01_Sampling_map.png)<!-- -->
+
+
+
+## B. Read sequencing characteristics 
+
+```r
+library(ggplot2)
+library(tidyverse)
+library(magrittr)
+library(ggh4x)
+```
+
+```r
+char <- read.table("03_tables/02_sequencing_characteristics_keep_only_ss_IDTAXA.csv", sep=";", dec =".", header=TRUE)
+
+
+char$Sequencing_type <- factor(char$Sequencing_type, levels = c("MISEQ", "NOVASEQ", "SAMBA", "IDTAXA", "NGSpeciesID", "WITHOUT ADAPTATIVE SAMPLING","ADAPTATIVE SAMPLING")) 
+char$Quality_filtering_steps <- factor(char$Quality_filtering_steps, levels = c("Input", "Keep after first filtering", "Keep for final analysis after second filtering")) 
+char$Target <- factor(char$Target, levels = c("Evaluation of adaptative sampling","Sequencing comparisons 16S","Sequencing comparisons ITS")) 
+ 
+ ggplot(char, aes(y = Percent, x= Sequencing_type, fill=Quality_filtering_steps)) +
+        geom_col(position = position_dodge()) +
+   facet_nested(~Target,  space = "free", scales = "free")+
+     theme_bw()+
+   scale_color_manual(values=c("Input"="#1F78B4","Keep after first filtering"="#FDAE61", "Keep for final analysis after second filtering"= "#E31A1C"))+   
+   scale_fill_manual(values=c("Input"="#1F78B4","Keep after first filtering"="#FDAE61", "Keep for final analysis after second filtering"= "#E31A1C"))+
+        xlab("Samples")   +
+   theme(strip.text.y = element_text(angle = 0))+
+   pdf("04_Figures/01_Sequencing_characteristics2.pdf", height = 5, width = 10)
+```
+
+
+
