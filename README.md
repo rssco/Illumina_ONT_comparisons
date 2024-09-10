@@ -8,7 +8,6 @@ All bioinformatic scripts used for the paper are available here.
 - The scripts for the figure 3 are here: [S02_Adaptative_sampling.md](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S02_Adaptative_sampling.md)  
 - The scripts for the figure 5 are here: [S03_Bacterial_comparisons.md](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S03_Bacterial_comparisons.md)
 - The scripts for the figure 6 are here: [S04_Fungal_comparisons.md](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S04_Fungal_comparisons.md)
-- The scripts for all supplementary figures are here: 
 
 Please, note that many figures, at the end, are improved with Inskape software. 
 
