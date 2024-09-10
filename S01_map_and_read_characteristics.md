@@ -67,6 +67,9 @@ char$Target <- factor(char$Target, levels = c("Evaluation of adaptative sampling
    theme(strip.text.y = element_text(angle = 0))+
    pdf("04_Figures/01_Sequencing_characteristics2.pdf", height = 5, width = 10)
 ```
+![Figure 4 | Percent of reads kept during the analyses ](
+https://github.com/rssco/Illumina_ONT_comparisons/blob/main/01_Figures/02_Sequencing_characteristics.png)<!-- -->
+
 
 
 
