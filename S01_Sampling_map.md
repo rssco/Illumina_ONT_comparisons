@@ -36,4 +36,4 @@ Brittany <- get_stadiamap(bbox = c(left = -5, bottom = 47.5, right = -3, top = 4
   )
 ```
 
-![Figure 1 | Sampling locations.](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/01_Figures/01_Methods_sampling.png)<!-- -->
+![Figure 1 | Sampling locations.](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/01_Figures/01_Sampling_map.png)<!-- -->
