@@ -1,14 +1,18 @@
 # ONT read processing 
 
 ## Table of contents
-[0. Basecalling](#Basecalling)
-
+[0. Basecalling](#Basecalling)  
+  
 [1. Bacteria](#ont_bacteria)  
 - [Cutadapt](#ont_bacteria_cutadapt)  
+- [SAMBA](#ont_bacteria_samba)  
+- [IDTAXA](#ont_bacteria_idtaxa)  
+- [Kraken2](#ont_bacteria_kraken2)  
   
 [2. Fungi](#ont_fungi)  
 - [Cutadapt](#ont_fungi_cutadapt)  
 - [DADA2](#ont_fungi_cutadapt)  
+- [NGSpeciesID](#ont_fungi_NGSpeciesID)
 
 
 ## 0. Basecalling with Guppy <a name="Basecalling"></a>
@@ -64,7 +68,7 @@ do cutadapt -O ${#PRIMER_F} -e ${E} --max-average-error-rate ${MAE} -m ${MIN_LEN
    cutadapt - -O ${#PRIMER_R} -e ${E}  --max-average-error-rate ${MAE} -m ${MIN_LENGTH} --discard-untrimmed --report=minimal -a ${PRIMER_R} -o ${i%.fastq.gz}_cutadapt.fastq.gz; done
 ```
 
-### SAMBA
+### SAMBA <a name="ont_bacteria_samba"></a>
 https://gitlab.ifremer.fr/bioinfo/workflows/samba
 
 Filtering length=1000-2000, silva_v138.1_16S_NR99_SEQ_k15 and silva_v138.1_16S_NR99_TAX.txt for minimap2_db in "nanopore.config"  
@@ -85,11 +89,11 @@ module load nextflow slurm-drmaa graphviz
 
 nextflow run samba/main.nf -profile singularity,nanopore -c samba/abims.config
 ```
-### IDTAXA
+### IDTAXA <a name="ont_bacteria_idtaxa"></a>
 
-https://github.com/nhenry50/nanamp
+https://github.com/nhenry50/assign_taxo
 
-### KRAKEN2
+### KRAKEN2 <a name="ont_bacteria_kraken2"></a>
 
 ```bash
 #!/usr/bin/env bash
@@ -112,6 +116,24 @@ output=02_ONT/08_KRAKEN2/01_cutadapt_Q13
 
 kraken2 --db ${database} ${input} --report ${output}/$(basename ${input%.fastq.gz}_16S.kreport) --output ${output}/$(basename ${input%.fastq.gz}_16S.kraken) --use-na
 mes --memory-mapping
+```
+
+```bash
+#!/usr/bin/env bash
+#SBATCH --job-name=kraken_biom
+#SBATCH --partition fast
+#SBATCH --mem 1G
+#SBATCH --cpus-per-task 1
+#SBATCH -o %x-%j.out 
+#SBATCH -e %x-%j.err
+#SBATCH --mail-user coralie.rousseau@sb-roscoff.fr
+#SBATCH --mail-type ALL
+#SBATCH --array 1-2
+
+input=$(ls ../finalresult/02_ONT/08_KRAKEN2/01_cutadapt_Q13/*16S.kreport  | awk "NR==$SLURM_ARRAY_TASK_ID")
+output=../finalresult/02_ONT/08_KRAKEN2
+
+bash /shared/home/crousseau/.local/bin/kraken-biom ${input} --max D --min S -o ${output}/abondant_table_16S.biom
 ```
 
 ## 2. Fungi <a name="ont_fungi"></a>
@@ -140,7 +162,7 @@ do cutadapt -O ${#PRIMER_F} -e ${E} --discard-untrimmed --revcomp --report=minim
    cutadapt - -O ${#PRIMER_R} -e ${E} --discard-untrimmed --revcomp --report=minimal -a ${PRIMER_R} -o ${i%.fastq}_cutadapt.fastq; done
 ```
 
-### NGSpeciesID
+### NGSpeciesID <a name="ont_fungi_NGSpeciesID"></a>
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=ngspeciesID
