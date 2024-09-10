@@ -1,4 +1,4 @@
-# 1. Mock analysis 
+# Mock analysis with IDTAXA, SAMBA and KRAKEN2 
 ## 1. Library
 ```r
 library(tidyverse)
@@ -318,7 +318,7 @@ scale_color_manual(values = c("Sulfitobacter_undaria" = "#E41A1C",
 ```
 
 
-# 2. Bacterial comparisons
+# Bacterial comparisons on entire dataset
 ## 1. Libraries
 ```r
 library(phyloseq)
