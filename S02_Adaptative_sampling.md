@@ -34,6 +34,7 @@ nextflow run ../finalresult/02_ONT/00_BASECALLING_GUPPY_ADAPTATIVE_SAMPLING_v6.1
 # On Rstudio
 ## 1. Libraries
 ```r
+#!/bin/Rscript
 library(tidyverse)
 library(magrittr)
 library(phyloseq)
@@ -46,6 +47,7 @@ library(ggforce)
 
 ## 2. Without adaptative sampling
 ```r
+#!/bin/Rscript
 #load ps + read length table
 ps_without_adapt <- readRDS("02_Phyloseq_objects/03_ps_witout_adapt_SAMBA.rds")
 read_length <- read.table("01_Tables/01_read_id_lenght_without_adapt.tsv", sep="\t", header=TRUE)
@@ -109,6 +111,7 @@ facet_zoom(ylim = c(0,100000), split = TRUE, zoom.size = 4)
 
 ## 2. With adaptative sampling
 ```r
+#!/bin/Rscript
 #load ps + read length table
 ps_with_adapt <- readRDS("02_Phyloseq_objects/04_ps_with_adapt_SAMBA.rds")
 read_length <- read.table("01_Tables/03_read_id_length_with_adapt.tsv", sep="\t", header=TRUE)
@@ -172,6 +175,7 @@ facet_zoom(ylim = c(0,100000), split = TRUE, zoom.size = 4)
 ## 3. Combined figures
 
 ```r
+#!/bin/Rscript
 ab <- gridExtra::grid.arrange(without, with, ncol=2)
 cd <- gridExtra::grid.arrange(zoom_wihtout, zoom_with, ncol=2)
 z <- gridExtra::grid.arrange(ab, cd, nrow=2)

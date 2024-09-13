@@ -1,6 +1,7 @@
 # Mock analysis with IDTAXA, SAMBA and KRAKEN2 
 ## 0. Library
 ```r
+#!/bin/Rscript
 library(tidyverse)
 library(magrittr)
 library(phyloseq)
@@ -16,6 +17,7 @@ library(gghighlight)
 ## 1. Tables 
 
 ```r
+#!/bin/Rscript
 kraken <- read.table("02_Tables/01_abundance_table_kraken2.csv", sep=";", header=TRUE, dec = ".", row.names = 1)
 ps_samba <- readRDS("02_Tables/02_phyloseq_samba_all_assignation_Species.rds")
 idtaxa <- read.table("02_Tables/03_idtaxa_abundance_table.csv", sep=";", header=TRUE, dec=".", row.names = 1)
@@ -24,6 +26,7 @@ idtaxa <- read.table("02_Tables/03_idtaxa_abundance_table.csv", sep=";", header=
 ## 2. Transform tables
 ### Transform kraken2 table
 ```r
+#!/bin/Rscript
 taxonomy <- kraken %>% select(taxonomy) %>%  separate(taxonomy,c("Kingdom","Phylum","Class","Order","Family","Genus","Species"), sep=";",convert=TRUE)
 
 otu <- kraken %>% dplyr::select(-c(taxonomy,observation_name,observation_sum))
@@ -35,6 +38,7 @@ write.table(otu, "02_Tables/01_otu_kraken2.csv", sep=";", quote=FALSE)
 ### Transform samba ps
 
 ```r
+#!/bin/Rscript
 otu_samba <- ps_samba@otu_table %>% as.data.frame()
 tax_samba <- ps_samba@tax_table %>% as.data.frame()
 
@@ -45,6 +49,7 @@ write.table(tax_samba, "02_Tables/02_tax_samba.csv", sep=";", quote=FALSE)
 ### Transform idtaxa table
 
 ```r
+#!/bin/Rscript
 taxonomy <- idtaxa %>% select(consensus_taxo) %>%  separate(consensus_taxo,c("Kingdom","Phylum","Class","Order","Family","Genus","Species"), sep=";",convert=TRUE)
 
 otu <- idtaxa %>% dplyr::select(-c(consensus_taxo))
@@ -58,6 +63,7 @@ write.table(otu, "02_Tables/03_otu_idtaxa.csv", sep=";", quote=FALSE)
 Concatenate by hand otu/tax/sample table PR2+SAMBA+KRAKEN2
 
 ```r
+#!/bin/Rscript
 otu <- read.table("02_Tables/04_otu_all.csv", header=TRUE, sep=";", row.names = 1)
 sample <- read.table("02_Tables/04_sample_all.csv", header=TRUE, sep=";", row.names = 1)
 tax <- read.table("02_Tables/04_tax_all.csv", header=TRUE, sep=";", row.names = 1)
@@ -74,6 +80,7 @@ ps_idtaxa_samba_kraken2
 ```
 ## SAVE 
 ```r
+#!/bin/Rscript
 saveRDS(ps_idtaxa_samba_kraken2, "00_Phyloseq_objects/01_ps_idtaxa_samba_kraken2.rds")
 
 # Remove NOV MOCK + L2I4_MARS
@@ -84,6 +91,7 @@ saveRDS(ps_idtaxa_samba_kraken2, "00_Phyloseq_objects/02_ps_idtaxa_samba_kraken2
 ## 3. Plot mock comparisons 
 ### Plot Order
 ```r
+#!/bin/Rscript
 ps_mock <- subset_samples(ps_idtaxa_samba_kraken2, Individual=="MOCK")
 
 ps_mock = filter_taxa(ps_mock, function(x) sum(x) > 0, TRUE)
@@ -145,6 +153,7 @@ order <- ggplot(data=taxa, aes(x=Sample, y=Abundance, fill=Class))  +
 
 ### Plot Genus 
 ```r
+#!/bin/Rscript
 ps_mock <- subset_samples(ps_idtaxa_samba_kraken2, Individual=="MOCK")
 
 ps_mock = filter_taxa(ps_mock, function(x) sum(x) > 0, TRUE)
@@ -234,6 +243,7 @@ scale_color_manual(values = c("Sulfitobacter" = "#E41A1C",
 
 ### Plot Species
 ```r
+#!/bin/Rscript
 ps_mock <- subset_samples(ps_idtaxa_samba_kraken2, Individual=="MOCK")
 
 ps_mock = filter_taxa(ps_mock, function(x) sum(x) > 0, TRUE)
@@ -329,6 +339,7 @@ scale_color_manual(values = c("Sulfitobacter_undaria" = "#E41A1C",
 # Bacterial comparisons on entire dataset
 ## 1. Libraries
 ```r
+#!/bin/Rscript
 library(phyloseq)
 library(tidyverse)
 library(phyloseq)
@@ -352,6 +363,7 @@ library(ranacapa)
 ## 2. Generate one ps per all sequencing methods
 ### Novaseq 
 ```r
+#!/bin/Rscript
 otu_ns <- ps_novaseq@otu_table %>% as.data.frame() #6996 ASVS, 24 samples
 tax_ns <- ps_novaseq@tax_table %>% as.data.frame()
 
@@ -361,6 +373,7 @@ write.table(tax_ns, "01_Tables/tax_ns.csv", sep=";", quote=FALSE)
 
 ### Miseq
 ```r
+#!/bin/Rscript
 otu_ms <- ps_miseq@otu_table %>% as.data.frame() #4252 ASVs, 24 samples
 tax_ms <- ps_miseq@tax_table %>% as.data.frame()
 
@@ -370,6 +383,7 @@ write.table(tax_ms, "01_Tables/tax_ms.csv", sep=";", quote=FALSE)
 
 ### ONT
 ```r
+#!/bin/Rscript
 otu_ont <- ps_ont@otu_table %>% as.data.frame() #739 ASVs
 tax_ont <- ps_ont@tax_table %>% as.data.frame()
 
@@ -378,6 +392,7 @@ write.table(tax_ont, "01_Tables/tax_ont.csv", sep=";", quote=FALSE)
 ```
 
 ```r
+#!/bin/Rscript
 sample_ms_ns_ont <- read.table("01_Tables/02_sample_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
 otu_ms_ns_ont <- read.table("01_Tables/01_otu_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
 tax_ms_ns_ont <- read.table("01_Tables/03_tax_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
@@ -398,6 +413,7 @@ ps_ms_ns_ont
 
 ## SAVE
 ```r
+#!/bin/Rscript
 ps_ms_ns_ont <- subset_samples(ps_ms_ns_ont, !ID=="L2I4_MARS")
 ps_ms_ns_ont = filter_taxa(ps_ms_ns_ont, function(x) sum(x) > 0, TRUE)
 
@@ -406,6 +422,7 @@ saveRDS(ps_ms_ns_ont, "00_Phyloseq_objects/01_ps_ms_ns_ont_without_L1I4_MARS.rds
 
 ## 2. Normalization
 ```r
+#!/bin/Rscript
 total = median(sample_sums(ps_ms_ns_ont)) # Median= 36288
 standf = function(x, t=total) round(t * (x / sum(x))) # Standardize abundances to the median sequencing depth
 ps_filt = transform_sample_counts(ps_ms_ns_ont, standf)
@@ -416,10 +433,12 @@ ps_ms_ns_ont_trans
 
 ## SAVE
 ```r
+#!/bin/Rscript
 saveRDS(ps_ms_ns_ont_trans, "00_Phyloseq_objects/02_ps_ms_ns_ont_trans_without_L2I4_MARS.rds")
 ```
 
 ```r
+#!/bin/Rscript
 ps_agglomerate <- tax_glom(ps_ms_ns_ont_trans, taxrank = 'Genus', NArm=FALSE)
 ps_agglomerate
 
@@ -480,6 +499,7 @@ barplot <- ggplot(data=taxa, aes(x=Algae, y=Abundance, fill=Class))  +
 
 # 3. Combined plots
 ```r
+#!/bin/Rscript
 x <- gridExtra::grid.arrange(order, genus, species, nrow=3)
 z <- gridExtra::grid.arrange(x, barplot, nrow=1)
 ggsave("04_combined_mock_barplot_analysis.pdf", z, height = 15, width = 25)

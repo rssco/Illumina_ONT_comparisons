@@ -104,6 +104,7 @@ python split_16S_18S_reads.py -f ${input} -r ${input%_R1_cutadapt.fastq.gz}_R2_c
 
 ### DADA2 16S <a name="novaseq_16S_dada2"></a>
 ```r
+#!/bin/Rscript
 library(dada2); packageVersion("dada2")
 
 
@@ -161,6 +162,7 @@ ochim_16S.rds")
 ### DADA2 18S <a name="novaseq_18S_dada2"></a>
 
 ```r
+#!/bin/Rscript
 library(dada2); packageVersion("dada2")
 
 
@@ -216,6 +218,7 @@ ochim_18S.rds")
 
 ### Phyloseq with 16S and 18S <a name="ps_16S_18S"></a>
 ```r
+#!/bin/Rscript
 taxa_16S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_16S.rds")
 taxa_18S <- readRDS("00_PHYLOSEQ_OBJECTS/00_taxa_18S.rds")
 seqtab.nochim_16S <- readRDS("00_PHYLOSEQ_OBJECTS/00_seqtab.nochim_16S.rds")
@@ -246,6 +249,7 @@ saveRDS(ps, "00_PHYLOSEQ_OBJECTS/01_ps.rds")
 
 ### Remove plastid reads <a name="novaseq_remove_plastid"></a>
 ```r
+#!/bin/Rscript
 tax <- ps_sup@tax_table %>% as.data.frame()
 
 mito <- tax %>% as.data.frame() %>% filter(Family=="Mitochondria") #1219
@@ -275,6 +279,7 @@ saveRDS(ps_sup_clean, "00_PHYLOSEQ_OBJECTS/03_ps_sup_clean.rds")
 ### Decontamination with Microdecon <a name="novaseq_microdecon"></a>
 
 ```r
+#!/bin/Rscript
 ## change first column 
 tax <- ps_sup_clean@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
@@ -323,6 +328,7 @@ saveRDS(ps_decon, "00_PHYLOSEQ_OBJECTS/04_ps_decon.rds")
 
 ### Remove homopolymer <a name="novaseq_homopolymer"></a>
 ```r
+#!/bin/Rscript
 ref <- ps_decon@refseq %>% as.data.frame()
 colnames(ref)[1] <- "sequence"
 ref <- cbind(rownames(ref), ref)
@@ -361,6 +367,7 @@ saveRDS(ps_decon_wt_cc, "00_PHYLOSEQ_OBJECTS/05_ps_wt_homopoly.rds")
 
 ### Remove chimeras vsearch <a name="novaseq_vsearch"></a>
 ```bash
+#!/bin/Rscript
 #!/usr/bin/env bash
 #SBATCH --job-name=chimera
 #SBATCH --partition fast
@@ -383,6 +390,7 @@ vsearch --threads 3 --uchime_ref ${input} --chimera ${output_chimera} --nonchime
 ```
 
 ```r
+#!/bin/Rscript
 asv_no_chimera <- read.table("01_Tables/08_asv_no_chimera.tsv", sep="\t", header=FALSE, row.names = 1)
 asv_no_chimera <- rownames(asv_no_chimera[2])
 
@@ -400,6 +408,7 @@ saveRDS(ps_decon_wt_cc_no_chimera, "00_PHYLOSEQ_OBJECTS/06_ps_no_chimeras.rds")
 ### Identity Ascophyllum ASVs <a name="novaseq_asco"></a>
 
 ```r
+#!/bin/Rscript
 ref <- ps_decon_wt_cc_no_chimera@refseq %>% as.data.frame()
 colnames(ref)[1] <- "sequence"
 ref <- cbind(rownames(ref), ref)
@@ -440,6 +449,7 @@ saveRDS(ps_decon_asco, "00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
 ### Final novaseq ps object for sequencing comparison <a name="novaseq_ps_final"></a>
 
 ```r
+#!/bin/Rscript
 ps_decon_asco <- readRDS("../01_Microdecon_all/00_PHYLOSEQ_OBJECTS/07_ps_decon_asco.rds")
 sample <- read.table("01_Tables/01_samples_sites.csv", sep=";", header=TRUE, dec=".", row.names = 1)
 
@@ -480,6 +490,7 @@ ample}_R1_cutadapt.fastq.gz -p ${output}/${sample}_R2_cutadapt.fastq.gz; done
 ### DADA2 <a name="novaseq_fungi_dada2"></a>
 
 ```r
+#!/bin/Rscript
 library(dada2); packageVersion("dada2")
 
 
@@ -535,6 +546,7 @@ saveRDS(seqtab.nochim_ITS, "03_NOVASEQ_METAB/04_FUNGI_ANALYSIS/02_RSTUDIO_OUTPUT
 
 ### Phyloseq object ITS <a name="ps_its" ></a>
 ```r
+#!/bin/Rscript
 taxa_ITS <- readRDS("02_Phyloseq_objects/00_taxa_ITS.rds")
 seqtab.nochim_ITS <- readRDS("02_Phyloseq_objects/00_seqtab.nochim_ITS.rds")
 sample <- read.table("03_Tables/01_sample.csv", sep=";", header = TRUE, row.names = 1)
@@ -555,8 +567,8 @@ saveRDS(ps, "02_Phyloseq_objects/01_ps.rds")
 ### Clean tax table <a name="clean_tax_table" ></a>
 
 ```r
+#!/bin/Rscript
 tax_table(ps)[tax_table(ps) == "p__Fungi_phy_Incertae_sedis"] <- NA
-
 
 tax_table(ps)[tax_table(ps) == "c__Fungi_cls_Incertae_sedis"] <- NA
 tax_table(ps)[tax_table(ps) == "c__Chytridiomycota_cls_Incertae_sedis"] <- NA
@@ -564,7 +576,6 @@ tax_table(ps)[tax_table(ps) == "c__Chytridiomycota_cls_Incertae_sedis"] <- NA
 tax_table(ps)[tax_table(ps) == "c__Basidiomycota_cls_Incertae_sedis"] <- NA
 tax_table(ps)[tax_table(ps) == "c__Rozellomycotina_cls_Incertae_sedis"] <- NA
 tax_table(ps)[tax_table(ps) == "c__Pezizomycotina_cls_Incertae_sedis"] <- NA
-
 
 tax_table(ps)[tax_table(ps) == "f__Chytridiomycota_fam_Incertae_sedis"] <- NA
 tax_table(ps)[tax_table(ps) == "f__Fungi_fam_Incertae_sedis"] <- NA
@@ -630,6 +641,7 @@ saveRDS(ps, "02_Phyloseq_objects/02_ps_without_incertae.rds")
 
 ### Remove homopolymer <a name="remove_homopolymer" ></a>
 ```r
+#!/bin/Rscript
 tax <- ps@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
 rownames(tax) <- NULL
@@ -669,6 +681,7 @@ saveRDS(ps_decon_wt_cc, "02_Phyloseq_objects/03_ps_ss_decon_wt_cc.rds")
 ### Final ps object for sequencing comparison <a name="ps_final" ></a>
 
 ```r
+#!/bin/Rscript
 ps_decon_wt_mock <- subset_samples(ps_decon, !Type=="Mock")
 ps_decon_wt_mock = filter_taxa(ps_decon_wt_mock, function(x) sum(x) > 0, TRUE)
 ps_decon_wt_mock

@@ -1,6 +1,7 @@
 
 # 1. Libraries
 ```r
+#!/bin/Rscript
 library(phyloseq)
 library(tidyverse)
 library(magrittr)
@@ -23,6 +24,7 @@ library(colorspace)
 
 # 2. Tables
 ```r
+#!/bin/Rscript
 ps_novaseq <- readRDS("~/Documents/ownCloud/11_Rstudio/08_Novaseq/05_Fungi_analysis/02_Sites/00_Phyloseq_objects/01_ps_sites_fungi.rds") #after microdecon and removing CCC
 ps_miseq <- readRDS("~/Documents/ownCloud/11_Rstudio/05_Fungi_miseq_metaB/05_Envi_Phyloseq_object/06_ps_decon_wtout_mock2.rds") #after microdecon
 
@@ -36,6 +38,7 @@ ps_ms_ns_ont_trans <- readRDS("00_Phyloseq_objects/02_ps_ms_ns_ont_trans.rds") #
 # 3. Generate one ps per all sequencing methods
 ## Novaseq 
 ```r
+#!/bin/Rscript
 otu_ns <- ps_novaseq@otu_table %>% as.data.frame() 
 tax_ns <- ps_novaseq@tax_table %>% as.data.frame()
 ref_ns <- ps_novaseq@refseq %>% as.data.frame()
@@ -48,6 +51,7 @@ write.table(ref_ns, "01_Tables/ref_ns.csv", sep=";", quote=FALSE)
 ## Miseq
 
 ```r
+#!/bin/Rscript
 otu_ms <- ps_miseq@otu_table %>% as.data.frame() #434 ASVs, 24 samples
 tax_ms <- ps_miseq@tax_table %>% as.data.frame()
 ref_ms <- ps_miseq@refseq %>% as.data.frame()
@@ -60,6 +64,7 @@ write.table(ref_ms, "01_Tables/ref_ms.csv", sep=";", quote=FALSE)
 
 ## Combine Miseq, NovaSeq, ONT together by hand, then phyloseq object
 ```r
+#!/bin/Rscript
 sample_ms_ns_ont <- read.table("01_Tables/02_sample_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
 otu_ms_ns_ont <- read.table("01_Tables/01_otu_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
 tax_ms_ns_ont <- read.table("01_Tables/03_tax_ms_ns_ont.csv", header=TRUE, sep=";", row.names = 1)
@@ -80,6 +85,7 @@ saveRDS(ps_ms_ns_ont, "00_Phyloseq_objects/01_ps_ms_ns_ont.rds")
 # 4. Normalization
 
 ```r
+#!/bin/Rscript
 total = median(sample_sums(ps_ms_ns_ont)) # Median= 144989
 standf = function(x, t=total) round(t * (x / sum(x))) # Standardize abundances to the median sequencing depth
 ps_filt = transform_sample_counts(ps_ms_ns_ont, standf)
@@ -93,6 +99,7 @@ saveRDS(ps_ms_ns_ont_trans, "00_Phyloseq_objects/02_ps_ms_ns_ont_trans.rds")
 # 5. Barplot at genus level 
 
 ```r
+#!/bin/Rscript
 ps_agglomerate <- tax_glom(ps_ms_ns_ont_trans, taxrank = 'Species', NArm=FALSE)
 ps_agglomerate
 

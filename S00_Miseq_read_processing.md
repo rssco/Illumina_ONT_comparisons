@@ -20,6 +20,7 @@
 ### DADA2 <a name="miseq_bacteria_dada2"></a>
 
 ```r
+#!/bin/Rscript
 # Library
 library(tidyverse)
 library(dada2)
@@ -75,6 +76,7 @@ head(taxa.print)
 
 Ps construction
 ```r
+#!/bin/Rscript
 #Library
 library(phyloseq)
 library(microdecon)
@@ -94,6 +96,7 @@ saveRDS(ps, "00_Phyloseq_objects/01_ps.rds")
 
 ### Decontamination with microdecon <a name="miseq_decontamination"></a>
 ```r
+#!/bin/Rscript
 tax <- ps@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
 rownames(tax) <- NULL
@@ -121,6 +124,7 @@ clean_data <-  decon(data = otu_tax, numb.blanks = 2, numb.ind = c(24,2), taxa =
 
 ps decontaminated
 ```r
+#!/bin/Rscript
 tax <- ps@tax_table %>% as.data.frame()
 otu <- clean_data$decon.table %>% as.data.frame()
 sample <- ps@sam_data %>% as.data.frame()
@@ -145,12 +149,14 @@ ps_decon <- phyloseq(OTU, TAX, samples)
 
 ### Remove mock <a name="miseq_remove_mock"></a>
 ```r
+#!/bin/Rscript
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-mars", ps_decon)
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-BACT-nov", ps_decon)
 ```
 
 ### Remove plastid reads <a name="miseq_remove_plastid_reads"></a>
 ```r
+#!/bin/Rscript
 tax <- ps_decon_wt_mock@tax_table %>% as.data.frame()
 
 noaff <- tax %>% as.data.frame() %>% filter(is.na(Kingdom)) #175
@@ -175,6 +181,7 @@ ps_decon_wt_mock_clean
 ## 2. Fungi <a name="miseq_fungi"></a>
 ### Cutadapt <a name="miseq_fungi_cutadapt"></a>
 ```r
+#!/bin/Rscript
 #Library
 library(dada2)
 library(ShortRead)
@@ -261,6 +268,7 @@ rbind(FWD.ForwardReads = sapply(FWD.orients, primerHits, fn = fnFs.cut[[1]]),
 ### DADA2 <a name="miseq_fungi_dada2"></a>
 
 ```r
+#!/bin/Rscript
 # data
 cutFs <- sort(list.files(path.cut, pattern = "R1_001.fastq.gz", full.names = TRUE))
 cutRs <- sort(list.files(path.cut, pattern = "R2_001.fastq.gz", full.names = TRUE))
@@ -313,6 +321,7 @@ saveRDS(seqtab.nochim,"05_Envi_Phyloseq_object/03_seqtab.nochim.RData")
 ### Phyloseq object construction <a name="miseq_fungi_ps"></a>
 
 ```r
+#!/bin/Rscript
 ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows = FALSE),
                sample_data(sample),
                tax_table(taxa))
@@ -329,6 +338,7 @@ saveRDS(ps, "05_Envi_Phyloseq_object/04_ps.rds" )
 ### Decontamination with Microdecon <a name="miseq_fungi_microdecon"></a>
 
 ```r
+#!/bin/Rscript
 ## change first column 
 tax <- ps@tax_table %>% as.data.frame()
 tax <- cbind(rownames(tax), tax)
@@ -357,6 +367,7 @@ clean_data <-  decon(data = otu_tax, numb.blanks = 2, numb.ind = c(24,2), taxa =
 
 New ps object, decontaminated + saving
 ```r
+#!/bin/Rscript
 #recup tables from ps 
 tax <- ps@tax_table %>% as.data.frame()
 otu <- clean_data$decon.table %>% as.data.frame()
@@ -388,6 +399,7 @@ saveRDS(ps_decon, "05_Envi_Phyloseq_object/05_ps_decon.rds")
 ### Remove mock <a name="miseq_fungi_remove_mock"></a>
 
 ```r
+#!/bin/Rscript
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon) != "MOCK-FUNGI-mars", ps_decon)
 ps_decon_wt_mock <- prune_samples(sample_names(ps_decon_wt_mock) != "MOCK-FUNGI-nov", ps_decon_wt_mock)
 ps_miseq <- ps_decon_wt_mock
