@@ -10,8 +10,10 @@
 - [Kraken2](#ont_bacteria_kraken2)  
   
 [2. Fungi](#ont_fungi)  
+- [Chopper](#ont_fungi_chopper)
 - [Cutadapt](#ont_fungi_cutadapt)  
 - [NGSpeciesID](#ont_fungi_NGSpeciesID)
+
 
 
 ## 0. Basecalling with Guppy <a name="Basecalling"></a>
@@ -137,6 +139,28 @@ bash /shared/home/crousseau/.local/bin/kraken-biom ${input} --max D --min S -o $
 ```
 
 ## 2. Fungi <a name="ont_fungi"></a>
+### Chopper <a name="ont_fungi_chopper"></a>
+
+```bash
+#!/usr/bin/env bash
+#SBATCH --job-name=chopper
+#SBATCH --partition fast
+#SBATCH --mem 1G
+#SBATCH --cpus-per-task 1 
+#SBATCH -o %x-%j.out 
+#SBATCH -e %x-%j.err
+#SBATCH --mail-user coralie.rousseau@sb-roscoff.fr
+#SBATCH --mail-type END
+#SBATCH --array 1-28
+
+module load chopper/0.7.0  
+
+input=$(ls 02_ONT/02_FASTQ/01_WITHOUT_ADAPTATIVE/02_FUNGI/*gz | awk "NR==$SLURM_ARRAY_TASK_ID")
+output=02_ONT/09_NGSPECIESID/01_QUALITY_FILTERING
+
+gunzip -c ${input} | chopper -q 10 -l 1000 --maxlength 2000 > ${output}/$(basename ${input%.gz}_chopper.fastq)
+```
+
 ### Cutadapt <a name="ont_fungi_cutadapt"></a>
 
 ```bash
@@ -163,6 +187,7 @@ do cutadapt -O ${#PRIMER_F} -e ${E} --discard-untrimmed --revcomp --report=minim
 ```
 
 ### NGSpeciesID <a name="ont_fungi_NGSpeciesID"></a>
+
 ```bash
 #!/usr/bin/env bash
 #SBATCH --job-name=ngspeciesID
