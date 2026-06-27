@@ -1,7 +1,6 @@
 # Comparison of short and long-read metabarcoding sequencing: challenges and solutions for plastid read removal and microbial community exploration of seaweed samples
 Authors: Coralie Rousseau, Nicolas Henry, Sylvie Rousvoal, Gwenn Tanguy, Erwan Legeay, Catherine Leblanc, Simon M. Dittami  
-Manuscript status: in revision  
-Preprint: 10.22541/au.172675397.78191661/v1
+Paper: https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.14129
 
 All bioinformatic scripts used for the paper are available here. 
 - The scripts used for read processing, including cutadapt, dada2 and phyloseq could be found here: [S00_Miseq_read_processing](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S00_Miseq_read_processing.md), [S00_Novaseq_read_processing.md](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S00_Novaseq_read_processing.md), [S00_ONT_read_processing.md](https://github.com/rssco/Illumina_ONT_comparisons/blob/main/S00_ONT_read_processing.md)
